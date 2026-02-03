@@ -1,0 +1,333 @@
+// ===========================================
+// MIXINS — My Library
+// ===========================================
+
+@use 'variables' as *;
+
+// -----------------------------
+// BREAKPOINTS
+// -----------------------------
+
+// Mobile-first breakpoint mixins
+@mixin sm {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+// Max-width (mobile-only) mixins
+@mixin mobile-only {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-only {
+  @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+// -----------------------------
+// TYPOGRAPHY
+// -----------------------------
+
+@mixin heading-1 {
+  font-family: $font-heading;
+  font-size: $font-size-4xl;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-tight;
+  color: $color-text-heading;
+  
+  @include lg {
+    font-size: $font-size-5xl;
+  }
+}
+
+@mixin heading-2 {
+  font-family: $font-heading;
+  font-size: $font-size-3xl;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-tight;
+  color: $color-text-heading;
+  
+  @include lg {
+    font-size: $font-size-4xl;
+  }
+}
+
+@mixin heading-3 {
+  font-family: $font-heading;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-tight;
+  color: $color-text-heading;
+}
+
+@mixin heading-4 {
+  font-family: $font-body;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-normal;
+  color: $color-text-heading;
+}
+
+@mixin body-text {
+  font-family: $font-body;
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  line-height: $line-height-relaxed;
+  color: $color-text;
+}
+
+@mixin small-text {
+  font-family: $font-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-normal;
+  line-height: $line-height-normal;
+  color: $color-text-muted;
+}
+
+@mixin caption {
+  font-family: $font-body;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-normal;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// -----------------------------
+// LAYOUT
+// -----------------------------
+
+@mixin container {
+  width: 100%;
+  max-width: $container-max-width;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: $container-padding-mobile;
+  padding-right: $container-padding-mobile;
+  
+  @include md {
+    padding-left: $container-padding;
+    padding-right: $container-padding;
+  }
+}
+
+@mixin section {
+  padding-top: $space-2xl;
+  padding-bottom: $space-2xl;
+  
+  @include lg {
+    padding-top: $space-3xl;
+    padding-bottom: $space-3xl;
+  }
+}
+
+// -----------------------------
+// GRID
+// -----------------------------
+
+@mixin book-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $grid-gap-mobile;
+  
+  @include md {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $grid-gap;
+  }
+  
+  @include lg {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+// -----------------------------
+// BUTTONS
+// -----------------------------
+
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  padding: $space-sm $space-lg;
+  font-family: $font-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  line-height: 1;
+  text-decoration: none;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: background-color $transition-fast, 
+              border-color $transition-fast,
+              color $transition-fast,
+              transform $transition-fast;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin button-primary {
+  @include button-base;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  
+  &:hover:not(:disabled) {
+    background-color: $color-primary-hover;
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+@mixin button-secondary {
+  @include button-base;
+  background-color: transparent;
+  color: $color-primary;
+  border: $border-width $border-style $color-primary;
+  
+  &:hover:not(:disabled) {
+    background-color: $color-primary;
+    color: white;
+  }
+}
+
+// -----------------------------
+// CARDS
+// -----------------------------
+
+@mixin card {
+  background-color: $color-surface-elevated;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+  transition: transform $transition-base, box-shadow $transition-base;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-md;
+  }
+}
+
+@mixin card-static {
+  background-color: $color-surface-elevated;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+}
+
+// -----------------------------
+// FORMS
+// -----------------------------
+
+@mixin input {
+  width: 100%;
+  padding: $space-sm $space-md;
+  font-family: $font-body;
+  font-size: $font-size-base;
+  color: $color-text;
+  background-color: white;
+  border: $border-width $border-style $color-border;
+  border-radius: $radius-sm;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+  
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+  
+  &::placeholder {
+    color: $color-text-light;
+  }
+}
+
+// -----------------------------
+// BADGES
+// -----------------------------
+
+@mixin badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $space-xs $space-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+@mixin badge-outline {
+  @include badge;
+  background-color: transparent;
+  border: $border-width $border-style $color-border;
+  color: $color-text-muted;
+}
+
+@mixin badge-filled {
+  @include badge;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+}
+
+// -----------------------------
+// UTILITIES
+// -----------------------------
+
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}

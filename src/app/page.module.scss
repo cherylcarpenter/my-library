@@ -1,0 +1,27 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $space-lg;
+}
+
+.hero {
+  text-align: center;
+  max-width: 600px;
+
+  h1 {
+    @include heading-1;
+    margin-bottom: $space-md;
+    color: $color-primary;
+  }
+
+  p {
+    @include body-text;
+    color: $color-text-muted;
+  }
+}

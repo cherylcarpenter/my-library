@@ -1,0 +1,230 @@
+// ===========================================
+// GLOBAL STYLES — My Library
+// ===========================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// -----------------------------
+// CSS RESET
+// -----------------------------
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-body;
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  line-height: $line-height-relaxed;
+  color: $color-text;
+  background-color: $color-bg;
+  min-height: 100vh;
+}
+
+// -----------------------------
+// TYPOGRAPHY
+// -----------------------------
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-heading;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-tight;
+  color: $color-text-heading;
+}
+
+h1 {
+  font-size: $font-size-4xl;
+  
+  @include lg {
+    font-size: $font-size-5xl;
+  }
+}
+
+h2 {
+  font-size: $font-size-3xl;
+  
+  @include lg {
+    font-size: $font-size-4xl;
+  }
+}
+
+h3 {
+  font-size: $font-size-2xl;
+}
+
+h4 {
+  font-family: $font-body;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+}
+
+h5 {
+  font-family: $font-body;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+h6 {
+  font-family: $font-body;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+p {
+  margin-bottom: $space-md;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-fast;
+  
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+strong, b {
+  font-weight: $font-weight-semibold;
+}
+
+small {
+  font-size: $font-size-sm;
+}
+
+// -----------------------------
+// LISTS
+// -----------------------------
+
+ul, ol {
+  list-style: none;
+}
+
+// -----------------------------
+// IMAGES
+// -----------------------------
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+// -----------------------------
+// FORMS
+// -----------------------------
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+// -----------------------------
+// TABLES
+// -----------------------------
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+// -----------------------------
+// UTILITY CLASSES
+// -----------------------------
+
+.container {
+  @include container;
+}
+
+.section {
+  @include section;
+}
+
+.visually-hidden {
+  @include visually-hidden;
+}
+
+.truncate {
+  @include truncate;
+}
+
+// Text alignment
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+// Font weights
+.font-normal { font-weight: $font-weight-normal; }
+.font-medium { font-weight: $font-weight-medium; }
+.font-semibold { font-weight: $font-weight-semibold; }
+.font-bold { font-weight: $font-weight-bold; }
+
+// Text colors
+.text-muted { color: $color-text-muted; }
+.text-primary { color: $color-primary; }
+
+// -----------------------------
+// FOCUS STYLES
+// -----------------------------
+
+:focus-visible {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
+
+// Remove focus outline for mouse users
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+// -----------------------------
+// SELECTION
+// -----------------------------
+
+::selection {
+  background-color: rgba($color-primary, 0.2);
+  color: $color-text-heading;
+}
+
+// -----------------------------
+// SCROLLBAR (optional, webkit only)
+// -----------------------------
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $color-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $color-border;
+  border-radius: $radius-full;
+  
+  &:hover {
+    background: $color-text-muted;
+  }
+}

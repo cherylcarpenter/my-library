@@ -1,0 +1,154 @@
+// ===========================================
+// DESIGN TOKENS — My Library
+// Based on UPENLY Figma template
+// ===========================================
+
+// -----------------------------
+// COLORS
+// -----------------------------
+
+// Primary
+$color-primary: #8B5A2B;
+$color-primary-hover: #6B4423;
+$color-primary-light: #A67C52;
+
+// Backgrounds
+$color-bg: #FEFEFE;
+$color-surface: #F5F5F5;
+$color-surface-elevated: #FFFFFF;
+
+// Text
+$color-text: #333333;
+$color-text-heading: #1A1A1A;
+$color-text-muted: #666666;
+$color-text-light: #999999;
+
+// Borders
+$color-border: #E5E5E5;
+$color-border-light: #F0F0F0;
+
+// Footer
+$color-footer-bg: #1A1A1A;
+$color-footer-text: #CCCCCC;
+
+// Semantic
+$color-success: #4A7C59;
+$color-warning: #D4A574;
+$color-info: #6B8CAE;
+$color-error: #C45B5B;
+
+// Ownership badges
+$color-kindle: #FF9900;
+$color-audible: #F7991C;
+
+// Shelf colors
+$color-shelf-read: $color-success;
+$color-shelf-reading: $color-warning;
+$color-shelf-to-read: $color-info;
+$color-shelf-dnf: $color-text-muted;
+
+// -----------------------------
+// TYPOGRAPHY
+// -----------------------------
+
+// Font families
+$font-heading: 'Playfair Display', 'Georgia', serif;
+$font-body: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+$font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+// Font sizes
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.25rem;    // 20px
+$font-size-2xl: 1.5rem;    // 24px
+$font-size-3xl: 2rem;      // 32px
+$font-size-4xl: 2.5rem;    // 40px
+$font-size-5xl: 3.5rem;    // 56px
+
+// Font weights
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Line heights
+$line-height-tight: 1.2;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.6;
+
+// -----------------------------
+// SPACING
+// -----------------------------
+
+$space-xs: 0.25rem;   // 4px
+$space-sm: 0.5rem;    // 8px
+$space-md: 1rem;      // 16px
+$space-lg: 1.5rem;    // 24px
+$space-xl: 2rem;      // 32px
+$space-2xl: 3rem;     // 48px
+$space-3xl: 4rem;     // 64px
+$space-4xl: 6rem;     // 96px
+
+// -----------------------------
+// LAYOUT
+// -----------------------------
+
+$container-max-width: 1200px;
+$container-padding: $space-lg;
+$container-padding-mobile: $space-md;
+
+// Grid
+$grid-gap: $space-lg;
+$grid-gap-mobile: $space-md;
+
+// -----------------------------
+// BREAKPOINTS
+// -----------------------------
+
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+
+// -----------------------------
+// BORDERS & RADIUS
+// -----------------------------
+
+$border-width: 1px;
+$border-style: solid;
+
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+
+// -----------------------------
+// SHADOWS
+// -----------------------------
+
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.12);
+
+// -----------------------------
+// TRANSITIONS
+// -----------------------------
+
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+$transition-slow: 300ms ease;
+
+// -----------------------------
+// Z-INDEX
+// -----------------------------
+
+$z-index-dropdown: 100;
+$z-index-sticky: 200;
+$z-index-fixed: 300;
+$z-index-modal-backdrop: 400;
+$z-index-modal: 500;
+$z-index-tooltip: 600;
