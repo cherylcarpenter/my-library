@@ -1,0 +1,55 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-lg;
+  background-color: $color-surface;
+}
+
+.card {
+  @include card-static;
+  padding: $space-2xl;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+
+  h1 {
+    @include heading-2;
+    margin-bottom: $space-sm;
+  }
+}
+
+.subtitle {
+  @include small-text;
+  margin-bottom: $space-xl;
+}
+
+.providers {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.providerButton {
+  @include button-base;
+  width: 100%;
+  padding: $space-md $space-lg;
+  background-color: white;
+  border: $border-width $border-style $color-border;
+  color: $color-text;
+  font-size: $font-size-base;
+  gap: $space-md;
+
+  &:hover {
+    background-color: $color-surface;
+    border-color: $color-text-muted;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
