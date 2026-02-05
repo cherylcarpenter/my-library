@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './styles.module.scss';
 
@@ -29,9 +30,18 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const currentShelf = searchParams.get('shelf') || '';
+  const currentShelf = searchParams.get('shelf') || 'read';
   const currentSort = searchParams.get('sort') || '-createdAt';
   const currentView = searchParams.get('view') || 'grid';
+
+  // Add shelf parameter to URL if not present (without redirect)
+  useEffect(() => {
+    if (!searchParams.get('shelf')) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('shelf', 'read');
+      router.replace(`${basePath}?${params.toString()}`);
+    }
+  }, [searchParams, basePath, router]);
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -52,7 +62,7 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
           value={currentShelf}
           onChange={(e) => updateFilter('shelf', e.target.value)}
         >
-          <option value="">All Shelves</option>
+          <option value="all">All Shelves</option>
           {shelves.map((shelf) => (
             <option key={shelf.id} value={shelf.slug || shelf.id}>
               {shelf.name || shelf.label}

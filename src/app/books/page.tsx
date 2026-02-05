@@ -21,7 +21,13 @@ interface SearchParams {
 async function getBooks(searchParams: SearchParams) {
   const params = new URLSearchParams();
   if (searchParams.page) params.set('page', searchParams.page);
-  if (searchParams.shelf) params.set('shelf', searchParams.shelf);
+  
+  // Handle shelf parameter: default to 'read', skip if 'all'
+  const shelf = searchParams.shelf || 'read';
+  if (shelf !== 'all') {
+    params.set('shelf', shelf);
+  }
+  
   if (searchParams.sort) params.set('sort', searchParams.sort);
   params.set('limit', '12');
 
@@ -65,7 +71,7 @@ export default async function BooksPage({
       <div className={styles.container}>
         <header className={styles.header}>
           <h1>Books</h1>
-          <p>{total} books in your library</p>
+          <p>{total} books on selected shelf</p>
         </header>
 
         <Suspense fallback={<div>Loading filters...</div>}>
