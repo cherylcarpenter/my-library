@@ -100,15 +100,17 @@ export function getCoverUrl(
 
 /**
  * Build an author photo URL
- * @param photoId - The OpenLibrary photo ID
+ * @param photoId - The OpenLibrary photo ID (numeric)
  * @param size - 'S' (small), 'M' (medium), or 'L' (large)
+ * 
+ * Note: Use /a/id/ for numeric photo IDs, /a/olid/ is for author OLIDs
  */
 export function getAuthorPhotoUrl(
   photoId: number,
   size: 'S' | 'M' | 'L' = 'L'
 ): string | null {
   if (!photoId) return null;
-  return `https://covers.openlibrary.org/a/olid/${photoId}-${size}.jpg`;
+  return `https://covers.openlibrary.org/a/id/${photoId}-${size}.jpg`;
 }
 
 /**
