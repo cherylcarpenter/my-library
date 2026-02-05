@@ -1,6 +1,12 @@
+import { Metadata } from 'next';
 import { signIn, auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import styles from './page.module.scss';
+
+export const metadata: Metadata = {
+  title: 'Sign In',
+  description: 'Sign in to access your library.',
+};
 
 export default async function SignInPage() {
   const session = await auth();

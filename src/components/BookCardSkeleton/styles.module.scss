@@ -1,0 +1,84 @@
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@mixin shimmer {
+  background: linear-gradient(
+    90deg,
+    #E5E5E5 25%,
+    #F0F0F0 50%,
+    #E5E5E5 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton {
+  background: #F5F5F5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cover {
+  aspect-ratio: 2 / 3;
+  @include shimmer;
+}
+
+.info {
+  padding: 1rem;
+}
+
+.title {
+  height: 1rem;
+  width: 80%;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  @include shimmer;
+}
+
+.author {
+  height: 0.875rem;
+  width: 60%;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+  @include shimmer;
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge {
+  height: 1.5rem;
+  width: 3rem;
+  border-radius: 999px;
+  @include shimmer;
+}
+
+/* List variant */
+.listSkeleton {
+  display: flex;
+  flex-direction: row;
+  border-radius: 8px;
+
+  .cover {
+    width: 80px;
+    height: 120px;
+    aspect-ratio: auto;
+    flex-shrink: 0;
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    padding: 0.75rem 1rem;
+  }
+}

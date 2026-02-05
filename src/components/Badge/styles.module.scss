@@ -1,0 +1,35 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.default {
+  background: #F5F5F5;
+  color: #666666;
+}
+
+.shelf {
+  background: #8B5A2B;
+  color: white;
+}
+
+.kindle {
+  background: #FF9900;
+  color: white;
+}
+
+.audible {
+  background: #F8991C;
+  color: white;
+}
+
+.series {
+  background: #E8DDD4;
+  color: #6B4423;
+}

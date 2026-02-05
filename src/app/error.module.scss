@@ -1,0 +1,48 @@
+.error {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.emoji {
+  display: block;
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-family: var(--font-roboto), 'Roboto', sans-serif;
+  font-size: 2rem;
+  color: #333333;
+  margin-bottom: 0.75rem;
+}
+
+.message {
+  color: #666666;
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.button {
+  display: inline-block;
+  background: #8B5A2B;
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #6B4423;
+  }
+}

@@ -1,0 +1,52 @@
+.rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.filled {
+  color: #F4B400;
+}
+
+.half {
+  color: #F4B400;
+  opacity: 0.5;
+}
+
+.empty {
+  color: #D4D4D4;
+}
+
+.value {
+  color: #666666;
+  font-weight: 500;
+}
+
+.sm {
+  font-size: 0.875rem;
+  
+  .value {
+    font-size: 0.75rem;
+  }
+}
+
+.md {
+  font-size: 1.125rem;
+  
+  .value {
+    font-size: 0.875rem;
+  }
+}
+
+.lg {
+  font-size: 1.5rem;
+  
+  .value {
+    font-size: 1rem;
+  }
+}

@@ -1,27 +1,142 @@
-@use '@/styles/variables' as *;
-@use '@/styles/mixins' as *;
-
-.main {
+.home {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: $space-lg;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
 .hero {
+  background: linear-gradient(135deg, #8B5A2B 0%, #6B4423 100%);
+  color: white;
+  padding: 5rem 1.5rem;
   text-align: center;
+}
+
+.heroContent {
   max-width: 600px;
+  margin: 0 auto;
 
   h1 {
-    @include heading-1;
-    margin-bottom: $space-md;
-    color: $color-primary;
+    font-family: var(--font-roboto), 'Roboto', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: white;
   }
 
   p {
-    @include body-text;
-    color: $color-text-muted;
+    font-size: 1.25rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    color: white;
+  }
+}
+
+.ctaButton {
+  display: inline-block;
+  background: white;
+  color: #8B5A2B;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.stats {
+  background: #F5F5F5;
+  padding: 3rem 0;
+  margin-bottom: 1rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.statCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.statNumber {
+  display: block;
+  font-family: var(--font-roboto), 'Roboto', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #8B5A2B;
+  margin-bottom: 0.25rem;
+}
+
+.statLabel {
+  color: #666666;
+  font-size: 0.9rem;
+}
+
+.section {
+  padding: 3rem 0;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-family: var(--font-roboto), 'Roboto', sans-serif;
+    font-size: 1.75rem;
+    color: #333333;
+  }
+
+  a {
+    color: #8B5A2B;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .heroContent h1 {
+    font-size: 2rem;
+  }
+
+  .heroContent p {
+    font-size: 1rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statNumber {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 3rem 1rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
   }
 }
