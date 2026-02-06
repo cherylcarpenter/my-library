@@ -107,28 +107,31 @@ async function searchByTitleAuthor(title: string, author?: string): Promise<any 
 
 /**
  * Extract cover URL from OpenLibrary data
+ * IMPORTANT: Only return a URL if we know a cover exists
  */
 function extractCoverUrl(data: any, isbn?: string): string | null {
   if (!data) return null;
 
-  // Method 1: From ISBN (most reliable for image quality)
-  if (isbn) {
-    return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
-  }
-
-  // Method 2: From cover_i in search results
+  // Method 1: From cover_i in search results (verified cover exists)
   if (data.cover_i) {
     return `https://covers.openlibrary.org/b/id/${data.cover_i}-L.jpg`;
   }
 
-  // Method 3: From covers array in books API
+  // Method 2: From covers array in books API (verified cover exists)
   if (data.cover && data.cover.large) {
     return data.cover.large;
   }
 
-  // Method 4: From edition cover_id
+  // Method 3: From edition cover_id (verified cover exists)
   if (data.cover_edition_key) {
     return `https://covers.openlibrary.org/b/olid/${data.cover_edition_key}-L.jpg`;
+  }
+
+  // Method 4: ISBN URL - ONLY if API returned cover data for this ISBN
+  // We can tell by checking if the result has any cover-related fields
+  // If no cover data was returned, don't generate ISBN URL (it will be 1x1)
+  if (isbn && (data.cover_i || data.cover || data.cover_edition_key)) {
+    return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
   }
 
   return null;

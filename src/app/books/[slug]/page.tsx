@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Badge from '@/components/Badge';
 import RatingStars from '@/components/RatingStars';
+import GenreTag from '@/components/GenreTag';
 import styles from './page.module.scss';
 
 interface BookDetail {
@@ -12,6 +13,7 @@ interface BookDetail {
   coverUrl?: string;
   authors: { id: string; name: string; slug: string }[];
   series?: { id: string; name: string; slug: string; position?: number };
+  genres?: { id: string; name: string; slug: string }[];
   rating?: number;
   review?: string;
   shelf?: string;
@@ -22,6 +24,7 @@ interface BookDetail {
   isbn?: string;
   dateRead?: string;
   description?: string;
+  openLibraryId?: string;
 }
 
 async function getBook(slug: string): Promise<BookDetail | null> {
@@ -101,6 +104,21 @@ export default async function BookDetailPage({
               </Link>
             )}
 
+            {/* Genres */}
+            {book.genres && book.genres.length > 0 && (
+              <div className={styles.genres}>
+                {book.genres.map((genre) => (
+                  <Link
+                    key={genre.id}
+                    href={`/books?genre=${genre.slug}`}
+                    className={styles.genreTag}
+                  >
+                    {genre.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+
             {book.shelf && (
               <div className={styles.shelf}>
                 <Badge variant="shelf">{book.shelf}</Badge>
@@ -146,6 +164,20 @@ export default async function BookDetailPage({
                 </div>
               )}
             </div>
+
+            {/* OpenLibrary Link */}
+            {book.openLibraryId && (
+              <div className={styles.openLibrary}>
+                <a
+                  href={`https://openlibrary.org/works/${book.openLibraryId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.openLibraryLink}
+                >
+                  View on OpenLibrary →
+                </a>
+              </div>
+            )}
 
             {/* Description */}
             {book.description && (

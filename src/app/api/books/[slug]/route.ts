@@ -17,6 +17,12 @@ export async function GET(
           }
         },
         series: true,
+        genres: {
+          include: {
+            genre: true
+          },
+          take: 10
+        },
         userBooks: {
           select: {
             id: true,
@@ -80,6 +86,12 @@ export async function GET(
         slug: book.series.slug,
         order: book.seriesOrder
       } : null,
+      genres: book.genres.map(g => ({
+        id: g.genre.id,
+        name: g.genre.name,
+        slug: g.genre.slug,
+        source: g.source
+      })),
       userBook: book.userBooks[0] ? {
         shelf: book.userBooks[0].shelf,
         dateRead: book.userBooks[0].dateRead,

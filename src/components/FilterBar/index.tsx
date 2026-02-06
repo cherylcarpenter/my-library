@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import GenreFilter from '@/components/GenreFilter';
 import styles from './styles.module.scss';
 
 interface Shelf {
@@ -33,6 +34,13 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
   const currentShelf = searchParams.get('shelf') || 'read';
   const currentSort = searchParams.get('sort') || '-createdAt';
   const currentView = searchParams.get('view') || 'grid';
+  const currentGenre = searchParams.get('genre');
+
+  // Check if any filters are active
+  const hasActiveFilters = 
+    currentShelf !== 'read' || 
+    currentSort !== '-createdAt' ||
+    currentGenre !== null;
 
   // Add shelf parameter to URL if not present (without redirect)
   useEffect(() => {
@@ -54,6 +62,16 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
     router.push(`${basePath}?${params.toString()}`);
   };
 
+  const clearFilters = () => {
+    const params = new URLSearchParams();
+    params.set('shelf', 'read');
+    params.set('sort', '-createdAt');
+    if (currentView !== 'grid') {
+      params.set('view', currentView);
+    }
+    router.push(`${basePath}?${params.toString()}`);
+  };
+
   return (
     <div className={styles.filterBar}>
       <div className={styles.filters}>
@@ -70,6 +88,11 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
           ))}
         </select>
 
+        <GenreFilter
+          selectedGenre={currentGenre}
+          onGenreChange={(genre) => updateFilter('genre', genre || '')}
+        />
+
         {showSort && (
           <select
             className={styles.select}
@@ -85,26 +108,38 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
         )}
       </div>
 
-      {showViewToggle && (
-        <div className={styles.viewToggle}>
+      <div className={styles.actions}>
+        {hasActiveFilters && (
           <button
-            className={`${styles.viewBtn} ${currentView === 'grid' ? styles.active : ''}`}
-            onClick={() => updateFilter('view', 'grid')}
-            aria-label="Grid view"
-            title="Grid view"
+            className={styles.clearBtn}
+            onClick={clearFilters}
+            type="button"
           >
-            ▦
+            Clear Filters
           </button>
-          <button
-            className={`${styles.viewBtn} ${currentView === 'list' ? styles.active : ''}`}
-            onClick={() => updateFilter('view', 'list')}
-            aria-label="List view"
-            title="List view"
-          >
-            ☰
-          </button>
-        </div>
-      )}
+        )}
+
+        {showViewToggle && (
+          <div className={styles.viewToggle}>
+            <button
+              className={`${styles.viewBtn} ${currentView === 'grid' ? styles.active : ''}`}
+              onClick={() => updateFilter('view', 'grid')}
+              aria-label="Grid view"
+              title="Grid view"
+            >
+              ▦
+            </button>
+            <button
+              className={`${styles.viewBtn} ${currentView === 'list' ? styles.active : ''}`}
+              onClick={() => updateFilter('view', 'list')}
+              aria-label="List view"
+              title="List view"
+            >
+              ☰
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const rating = searchParams.get('rating');
     const ownedKindle = searchParams.get('kindle');
     const ownedAudible = searchParams.get('audible');
+    const genre = searchParams.get('genre'); // Genre slug filter
     
     // Sorting - support `-field` for descending
     let sortParam = searchParams.get('sort') || 'dateAdded';
@@ -40,6 +41,18 @@ export async function GET(request: NextRequest) {
     if (ownedKindle === 'true') userBookWhere.ownedKindle = true;
     if (ownedAudible === 'true') userBookWhere.ownedAudible = true;
     
+    // Build where clause for Book (including genre filter)
+    const bookWhere: Record<string, unknown> = {};
+    if (genre) {
+      bookWhere.genres = {
+        some: {
+          genre: {
+            slug: genre
+          }
+        }
+      };
+    }
+    
     // Determine sort field and direction
     const orderBy: Record<string, unknown>[] = [];
     const validBookSorts = ['title', 'yearPublished', 'averageRating', 'pages'];
@@ -57,6 +70,7 @@ export async function GET(request: NextRequest) {
     // Get total count
     const total = await prisma.book.count({
       where: {
+        ...bookWhere,
         userBooks: {
           some: userBookWhere
         }
@@ -71,6 +85,7 @@ export async function GET(request: NextRequest) {
     // Get books with relations
     const books = await prisma.book.findMany({
       where: {
+        ...bookWhere,
         userBooks: {
           some: userBookWhere
         }
@@ -93,6 +108,18 @@ export async function GET(request: NextRequest) {
             name: true,
             slug: true
           }
+        },
+        genres: {
+          include: {
+            genre: {
+              select: {
+                id: true,
+                name: true,
+                slug: true
+              }
+            }
+          },
+          take: 3 // Limit genres per book
         },
         userBooks: {
           where: userBookWhere,
@@ -166,6 +193,11 @@ export async function GET(request: NextRequest) {
         slug: book.series.slug,
         order: book.seriesOrder
       } : null,
+      genres: book.genres.map(g => ({
+        id: g.genre.id,
+        name: g.genre.name,
+        slug: g.genre.slug
+      })),
       userBook: book.userBooks[0] ? {
         shelf: book.userBooks[0].shelf,
         dateRead: book.userBooks[0].dateRead,

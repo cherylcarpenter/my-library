@@ -95,6 +95,7 @@ model Book {
   series                  Series?      @relation(fields: [seriesId], references: [id])
   authors                 BookAuthor[]
   userBooks               UserBook[]
+  genres                  BookGenre[]
 
   @@index([seriesId])
   @@index([slug])
@@ -165,6 +166,27 @@ model BookAuthor {
   book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@id([bookId, authorId, role])
+}
+
+model Genre {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  slug      String      @unique
+  source    String?     // "kindle" | "audible" | "goodreads" | "openlibrary"
+  bookCount Int         @default(0)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  books     BookGenre[]
+}
+
+model BookGenre {
+  bookId  String
+  genreId String
+  source  String?  // Which import source this came from
+  book    Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  genre   Genre   @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, genreId])
 }
 
 enum UserRole {

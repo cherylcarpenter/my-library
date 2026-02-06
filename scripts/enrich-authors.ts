@@ -3,9 +3,10 @@
  * Fetches bios, photos, birth/death dates by searching OpenLibrary for author names
  *
  * Usage:
- *   npx tsx scripts/enrich-authors.ts          # Process all pending authors
- *   npx tsx scripts/enrich-authors.ts --dry    # Dry run (no database writes)
- *   npx tsx scripts/enrich-authors.ts --limit 50   # Process only 50 authors
+ *   npx tsx scripts/enrich-authors.ts              # Process all pending authors
+ *   npx tsx scripts/enrich-authors.ts --dry         # Dry run (no database writes)
+ *   npx tsx scripts/enrich-authors.ts --limit 50  # Process only 50 authors
+ *   npx tsx scripts/enrich-authors.ts --retry-no-photos  # Retry authors without photos
  */
 
 import 'dotenv/config';
@@ -39,6 +40,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 interface Options {
   dryRun?: boolean;
   limit?: number;
+  retryNoPhotos?: boolean;
 }
 
 interface OpenLibrarySearchResult {
@@ -87,29 +89,46 @@ async function searchAuthorByName(name: string): Promise<OpenLibrarySearchResult
 }
 
 async function enrichAuthors(options: Options = {}) {
-  const { dryRun = false, limit } = options;
+  const { dryRun = false, limit, retryNoPhotos = false } = options;
 
   console.log(`🔍 Enriching authors from OpenLibrary...`);
   console.log(`   Mode: ${dryRun ? 'DRY RUN (no changes)' : 'LIVE'}`);
 
-  // Find authors who haven't been enriched yet
-  const authorsToEnrich = await prisma.author.findMany({
-    where: {
-      enrichedAt: null,
-    },
-    take: limit || 200,
-  });
+  let authorsToEnrich: any[] = [];
 
-  console.log(`   Authors pending enrichment: ${authorsToEnrich.length}`);
+  if (retryNoPhotos) {
+    // Find authors who have been enriched but don't have photos
+    authorsToEnrich = await prisma.author.findMany({
+      where: {
+        enrichedAt: { not: null },
+        photoUrl: null,
+      },
+      take: limit || 500,
+    });
+    console.log(`   Authors to retry (no photos): ${authorsToEnrich.length}`);
+  } else {
+    // Find authors who haven't been enriched yet
+    authorsToEnrich = await prisma.author.findMany({
+      where: {
+        enrichedAt: null,
+      },
+      take: limit || 200,
+    });
+    console.log(`   Authors pending enrichment: ${authorsToEnrich.length}`);
+  }
 
   if (authorsToEnrich.length === 0) {
     const allAuthors = await prisma.author.count();
     const enrichedAuthors = await prisma.author.count({
       where: { enrichedAt: { not: null } },
     });
+    const withPhotos = await prisma.author.count({
+      where: { photoUrl: { not: null } },
+    });
     console.log(`   Total authors: ${allAuthors}`);
     console.log(`   Already enriched: ${enrichedAuthors}`);
-    console.log('✅ All authors are enriched!');
+    console.log(`   With photos: ${withPhotos}`);
+    console.log('✅ All authors are enriched or no photos to retry!');
     return;
   }
 
@@ -248,6 +267,7 @@ const options: Options = {
   limit: args.includes('--limit')
     ? parseInt(args[args.indexOf('--limit') + 1], 10)
     : undefined,
+  retryNoPhotos: args.includes('--retry-no-photos'),
 };
 
 enrichAuthors(options).catch(console.error);

@@ -1,0 +1,21 @@
+.genre-tag {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #666666;
+  background: #E8E8E8;
+  border-radius: 999px;
+  border: none;
+  white-space: nowrap;
+
+  &.clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #D4D4D4;
+      color: #333333;
+    }
+  }
+}

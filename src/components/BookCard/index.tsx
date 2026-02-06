@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Badge from '../Badge';
 import RatingStars from '../RatingStars';
+import GenreTag from '../GenreTag';
 import styles from './styles.module.scss';
 
 export interface Book {
@@ -11,6 +12,7 @@ export interface Book {
   coverUrl?: string;
   authors?: { id: string; name: string; slug: string }[];
   series?: { id: string; name: string; slug: string; position?: number };
+  genres?: { id: string; name: string; slug: string }[];
   rating?: number;
   shelf?: string;
   hasKindle?: boolean;
@@ -27,14 +29,18 @@ export interface Book {
 interface BookCardProps {
   book: Book;
   variant?: 'grid' | 'list';
+  onGenreClick?: (slug: string) => void;
 }
 
-export default function BookCard({ book, variant = 'grid' }: BookCardProps) {
+export default function BookCard({ book, variant = 'grid', onGenreClick }: BookCardProps) {
   // Normalize data - handle both flat and nested userBook formats
   const shelf = book.shelf || book.userBook?.shelf;
   const rating = book.rating || book.userBook?.myRating;
   const hasKindle = book.hasKindle ?? book.userBook?.ownedKindle;
   const hasAudible = book.hasAudible ?? book.userBook?.ownedAudible;
+
+  // Get top 2-3 genres
+  const topGenres = book.genres?.slice(0, 3) || [];
 
   return (
     <article className={`${styles.card} ${variant === 'list' ? styles.listCard : ''}`}>
@@ -77,6 +83,19 @@ export default function BookCard({ book, variant = 'grid' }: BookCardProps) {
             {book.series.name}
             {book.series.position && ` #${book.series.position}`}
           </Link>
+        )}
+
+        {topGenres.length > 0 && (
+          <div className={styles.genres}>
+            {topGenres.map((genre) => (
+              <GenreTag
+                key={genre.id}
+                name={genre.name}
+                slug={genre.slug}
+                onClick={onGenreClick}
+              />
+            ))}
+          </div>
         )}
 
         {rating && (
