@@ -58,11 +58,12 @@ async function enrichBook(
   dryRun: boolean,
   autoApprove: boolean
 ): Promise<{ updated: boolean; cover?: string; description?: string; skipReason?: string }> {
+  type EnrichResult = { updated: boolean; cover?: string; description?: string; skipReason?: string };
   const isbn = book.isbn;
   const title = book.title;
   const authorName = book.authors?.[0]?.name || '';
   
-  let result = { updated: false };
+  let result: EnrichResult = { updated: false };
   
   // Try OpenLibrary first
   let olData = null;
@@ -99,7 +100,7 @@ async function enrichBook(
                 description: olDesc || undefined,
                 openLibraryId: openlibrary.extractOpenLibraryId(olData) || undefined,
                 enrichedAt: new Date(),
-                enrichmentStatus: 'enriched'
+                enrichmentStatus: 'ENRICHED'
               }
             });
             result = { updated: true, cover: olCover, description: olDesc || undefined };
@@ -145,13 +146,13 @@ async function enrichBook(
             await prisma.book.update({
               where: { id: book.id },
               data: {
-                coverUrl: gbCover || book.coverUrl,
-                description: gbDesc || book.description,
+                coverUrl: gbCover || book.coverUrl || undefined,
+                description: gbDesc || book.description || undefined,
                 enrichedAt: new Date(),
-                enrichmentStatus: 'enriched'
+                enrichmentStatus: 'ENRICHED'
               }
             });
-            result = { updated: true, cover: gbCover, description: gbDesc || undefined };
+            result = { updated: true, cover: gbCover || undefined, description: gbDesc || undefined };
           }
         }
       }

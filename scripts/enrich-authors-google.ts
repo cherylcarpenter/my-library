@@ -53,7 +53,7 @@ async function main() {
     console.log(`[${processed}/${authors.length}] ${authorName}`);
     
     // Search Google Books by ISBN
-    const gbData = await googlebooks.searchByISBN(bookWithIsbn.book.isbn);
+    const gbData = await googlebooks.searchByISBN(bookWithIsbn.book.isbn!);
     
     if (gbData) {
       // Check if author matches

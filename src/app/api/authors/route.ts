@@ -44,8 +44,8 @@ export async function GET(request: NextRequest) {
       orderBy: sort === 'bookCount'
         ? { books: { _count: order as 'asc' | 'desc' } }
         : sort === 'lastName'
-        ? { lastName: order }
-        : { [sort]: order },
+        ? { lastName: order as 'asc' | 'desc' }
+        : { [sort]: order as 'asc' | 'desc' },
       skip,
       take: limit
     });

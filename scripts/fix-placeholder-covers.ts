@@ -48,7 +48,11 @@ async function getGoogleBooksCover(title: string, author?: string): Promise<stri
   }
 }
 
-async function processBook(book: { id: string; title: string; coverUrl: string; authors: { author: { name: string } }[] }) {
+async function processBook(book: { id: string; title: string; coverUrl: string | null; authors: { author: { name: string } }[] }) {
+  if (!book.coverUrl) {
+    return { status: 'cleared' as const, title: book.title };
+  }
+  
   const size = await checkCoverSize(book.coverUrl);
   
   if (size > 1000) {

@@ -189,8 +189,8 @@ async function getSubjectsByISBN(isbn: string): Promise<string[]> {
     if (result && result.subjects) {
       return result.subjects
         .slice(0, 5) // Take top 5
-        .map((s: any) => normalizeGenre(typeof s === 'string' ? s : s.name || ''))
-        .filter(g => g.length > 2 && isGenreLike(g));
+        .map((s: { name?: string } | string) => normalizeGenre(typeof s === 'string' ? s : s.name || ''))
+        .filter((g: string) => g.length > 2 && isGenreLike(g));
     }
   } catch (error) {
     // Silently continue
@@ -213,12 +213,12 @@ async function getSubjectsByOLID(olid: string): Promise<string[]> {
       return data.subjects
         .slice(0, 5)
         .map((s: string) => normalizeGenre(s))
-        .filter(g => g.length > 2 && isGenreLike(g));
+        .filter((g: string) => g.length > 2 && isGenreLike(g));
     }
   } catch (error) {
     // Silently continue
   }
-  
+
   return [];
 }
 
@@ -239,7 +239,7 @@ async function getSubjectsByTitle(title: string, author?: string): Promise<strin
         return doc.subjects
           .slice(0, 5)
           .map((s: string) => normalizeGenre(s))
-          .filter(g => g.length > 2 && isGenreLike(g));
+          .filter((g: string) => g.length > 2 && isGenreLike(g));
       }
     }
   } catch (error) {

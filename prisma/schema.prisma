@@ -76,6 +76,7 @@ model Book {
   isbn13                  String?
   goodreadsId             String?      @unique
   openLibraryKey          String?
+  openLibrarySlug         String?
   description             String?
   coverUrl                String?
   pages                   Int?
