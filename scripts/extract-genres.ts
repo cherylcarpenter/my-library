@@ -200,6 +200,29 @@ async function getSubjectsByISBN(isbn: string): Promise<string[]> {
 }
 
 /**
+ * Query OpenLibrary by work ID (OLID) - faster than search
+ */
+async function getSubjectsByOLID(olid: string): Promise<string[]> {
+  if (!olid) return [];
+  
+  try {
+    const url = `https://openlibrary.org/works/${olid}.json`;
+    const data = await rateLimitedFetch(url);
+    
+    if (data && data.subjects) {
+      return data.subjects
+        .slice(0, 5)
+        .map((s: string) => normalizeGenre(s))
+        .filter(g => g.length > 2 && isGenreLike(g));
+    }
+  } catch (error) {
+    // Silently continue
+  }
+  
+  return [];
+}
+
+/**
  * Query OpenLibrary for book subjects by title/author
  */
 async function getSubjectsByTitle(title: string, author?: string): Promise<string[]> {
@@ -366,11 +389,12 @@ async function extractGenres(options: Options = {}) {
     id: string;
     title: string;
     isbn: string | null;
+    openLibraryId: string | null;
     authors: { author: { name: string } }[];
   }
   
   const booksWithoutGenres = await prisma.$queryRaw`
-    SELECT b.id, b.title, b.isbn
+    SELECT b.id, b.title, b.isbn, b."openLibraryId"
     FROM "Book" b
     LEFT JOIN "BookGenre" bg ON b.id = bg."bookId"
     WHERE bg."bookId" IS NULL
@@ -389,13 +413,20 @@ async function extractGenres(options: Options = {}) {
     for (const book of booksWithoutGenres) {
       const authorName = book.authors?.[0]?.author?.name;
       
-      // Try ISBN first, then title
+      // Priority: OLID (fastest) → ISBN → Title
       let subjects: string[] = [];
       
-      if (book.isbn) {
+      // Try OLID first (work endpoint, very fast)
+      if (book.openLibraryId) {
+        subjects = await getSubjectsByOLID(book.openLibraryId);
+      }
+      
+      // Fallback to ISBN
+      if (subjects.length === 0 && book.isbn) {
         subjects = await getSubjectsByISBN(book.isbn);
       }
       
+      // Fallback to title search
       if (subjects.length === 0 && authorName) {
         subjects = await getSubjectsByTitle(book.title, authorName);
       }

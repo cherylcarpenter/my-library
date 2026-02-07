@@ -2,8 +2,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 1rem;
   margin-top: 2rem;
+}
+
+.perPageSelect {
+  padding: 0.625rem 2rem 0.625rem 1rem;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: white;
+  color: #333333;
+  font-size: 0.9rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  min-width: 130px;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #8B5A2B;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #8B5A2B;
+    box-shadow: 0 0 0 3px rgba(139, 90, 43, 0.1);
+  }
 }
 
 .pages {
@@ -43,6 +69,9 @@
   background: #8B5A2B;
   border-color: #8B5A2B;
   color: white;
+  &:hover {
+    color: white;
+  }
 }
 
 .ellipsis {
@@ -51,6 +80,16 @@
 }
 
 @media (max-width: 480px) {
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .perPageSelect {
+    width: 100%;
+    order: -1;
+  }
+
   .page,
   .arrow {
     min-width: 36px;

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import BookPlaceholderIcon from '@/components/Icons/BookPlaceholderIcon';
 import Badge from '../Badge';
 import RatingStars from '../RatingStars';
 import GenreTag from '../GenreTag';
@@ -15,12 +16,14 @@ export interface Book {
   genres?: { id: string; name: string; slug: string }[];
   rating?: number;
   shelf?: string;
+  dateRead?: string | null;
   hasKindle?: boolean;
   hasAudible?: boolean;
   // Alternative nested format from some APIs
   userBook?: {
     shelf?: string;
     myRating?: number;
+    dateRead?: string | null;
     ownedKindle?: boolean;
     ownedAudible?: boolean;
   };
@@ -36,8 +39,16 @@ export default function BookCard({ book, variant = 'grid', onGenreClick }: BookC
   // Normalize data - handle both flat and nested userBook formats
   const shelf = book.shelf || book.userBook?.shelf;
   const rating = book.rating || book.userBook?.myRating;
+  const dateRead = book.dateRead || book.userBook?.dateRead;
   const hasKindle = book.hasKindle ?? book.userBook?.ownedKindle;
   const hasAudible = book.hasAudible ?? book.userBook?.ownedAudible;
+
+  // Format shelf name: "READ" → "Read", "TO_READ" → "To Read"
+  const formatShelf = (s: string) => 
+    s.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  
+  // Get shelf link: "READ" → /books?shelf=read
+  const getShelfLink = (s: string) => `/books?shelf=${s.toLowerCase().replace(/_/g, '-')}`;
 
   // Get top 2-3 genres
   const topGenres = book.genres?.slice(0, 3) || [];
@@ -56,7 +67,7 @@ export default function BookCard({ book, variant = 'grid', onGenreClick }: BookC
             />
           ) : (
             <div className={styles.placeholder}>
-              <span>📖</span>
+              <BookPlaceholderIcon />
             </div>
           )}
         </div>
@@ -72,7 +83,7 @@ export default function BookCard({ book, variant = 'grid', onGenreClick }: BookC
             {book.authors.map((author, i) => (
               <span key={author.id}>
                 <Link href={`/authors/${author.slug}`}>{author.name}</Link>
-                {i < book.authors.length - 1 && ', '}
+                {i < (book.authors || []).length - 1 && ', '}
               </span>
             ))}
           </div>
@@ -105,10 +116,20 @@ export default function BookCard({ book, variant = 'grid', onGenreClick }: BookC
         )}
 
         <div className={styles.badges}>
-          {shelf && <Badge variant="shelf">{shelf}</Badge>}
-          {hasKindle && <Badge variant="kindle">Kindle</Badge>}
-          {hasAudible && <Badge variant="audible">Audible</Badge>}
+          {shelf && (
+            <Badge variant="shelf" href={getShelfLink(shelf)}>
+              {formatShelf(shelf)}
+            </Badge>
+          )}
+          {hasKindle && <Badge variant="kindle" href="/books?kindle=true">Kindle</Badge>}
+          {hasAudible && <Badge variant="audible" href="/books?audible=true">Audible</Badge>}
         </div>
+
+        {shelf === 'READ' && dateRead && (
+          <div className={styles.dateRead}>
+            Read {new Date(dateRead).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+          </div>
+        )}
       </div>
     </article>
   );

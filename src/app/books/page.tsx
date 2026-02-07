@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import BookCard, { Book } from '@/components/BookCard';
+import BookOpenIcon from '@/components/Icons/BookOpenIcon';
+import BookCard, { Book as BookType } from '@/components/BookCard';
 import BookGrid from '@/components/BookGrid';
 import FilterBar from '@/components/FilterBar';
 import Pagination from '@/components/Pagination';
@@ -16,6 +17,11 @@ interface SearchParams {
   shelf?: string;
   sort?: string;
   view?: string;
+  category?: string;
+  kindle?: string;
+  audible?: string;
+  rating?: string;
+  perPage?: string;
 }
 
 async function getBooks(searchParams: SearchParams) {
@@ -29,7 +35,15 @@ async function getBooks(searchParams: SearchParams) {
   }
   
   if (searchParams.sort) params.set('sort', searchParams.sort);
-  params.set('limit', '12');
+  else params.set('sort', '-dateRead'); // Default to Recently Read
+  if (searchParams.category) params.set('category', searchParams.category);
+  if (searchParams.kindle) params.set('kindle', searchParams.kindle);
+  if (searchParams.audible) params.set('audible', searchParams.audible);
+  if (searchParams.rating) params.set('rating', searchParams.rating);
+  
+  // Handle perPage parameter with default of 24
+  const perPage = searchParams.perPage || '24';
+  params.set('limit', perPage);
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/books?${params.toString()}`,
@@ -66,12 +80,37 @@ export default async function BooksPage({
   const total = data.pagination?.total || 0;
   const viewMode = params.view || 'grid';
 
+  // Build filter description
+  const filters: string[] = [];
+  if (params.shelf && params.shelf !== 'read' && params.shelf !== 'all') {
+    filters.push(params.shelf.replace(/-/g, ' '));
+  }
+  if (params.category) {
+    filters.push(params.category.replace(/-/g, ' '));
+  }
+  if (params.kindle) {
+    filters.push('Kindle');
+  }
+  if (params.audible) {
+    filters.push('Audible');
+  }
+  if (params.rating) {
+    const ratingLabel = params.rating.endsWith('+')
+      ? `${params.rating.slice(0, -1)}+ stars`
+      : `${params.rating} star${params.rating === '1' ? '' : 's'}`;
+    filters.push(ratingLabel);
+  }
+  
+  const filterDescription = filters.length > 0
+    ? `${total} ${filters.join(' + ')} books`
+    : `${total} books on selected shelf`;
+
   return (
     <div className={styles.booksPage}>
       <div className={styles.container}>
         <header className={styles.header}>
           <h1>Books</h1>
-          <p>{total} books on selected shelf</p>
+          <p>{filterDescription}</p>
         </header>
 
         <Suspense fallback={<div>Loading filters...</div>}>
@@ -104,7 +143,7 @@ export default async function BooksPage({
           </>
         ) : (
           <div className={styles.empty}>
-            <span>📚</span>
+            <BookOpenIcon size={64} />
             <p>No books found</p>
           </div>
         )}

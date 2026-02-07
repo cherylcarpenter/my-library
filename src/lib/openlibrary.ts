@@ -170,3 +170,56 @@ export function extractAuthorId(data: any): string | null {
 
   return null;
 }
+
+/**
+ * Search for authors by name
+ * Returns the best match author from search results
+ */
+export async function searchAuthorsByName(name: string): Promise<any | null> {
+  if (!name) return null;
+
+  const encodedName = encodeURIComponent(name);
+  const url = `https://openlibrary.org/search.json?author=${encodedName}&limit=5`;
+
+  try {
+    const data = await rateLimitedFetch(url);
+    const docs = data.docs || [];
+
+    // Find best match by exact name or close match
+    for (const doc of docs) {
+      // Check if author_name matches closely
+      if (doc.author_name && Array.isArray(doc.author_name)) {
+        const authorName = doc.author_name[0].toLowerCase();
+        const searchName = name.toLowerCase();
+
+        // Exact match or last name match
+        if (authorName === searchName ||
+            searchName.includes(authorName) ||
+            authorName.includes(searchName.split(' ').pop() || '')) {
+          // Extract OLID from first author key
+          if (doc.author_key && doc.author_key.length > 0) {
+            return {
+              olid: doc.author_key[0].replace('/authors/', ''),
+              name: doc.author_name[0],
+              matchScore: doc.score || 0
+            };
+          }
+        }
+      }
+    }
+
+    // Fallback: return first result if any
+    if (docs.length > 0 && docs[0].author_key && docs[0].author_key.length > 0) {
+      return {
+        olid: docs[0].author_key[0].replace('/authors/', ''),
+        name: docs[0].author_name?.[0] || name,
+        matchScore: docs[0].score || 0
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Error searching for author "${name}":`, error);
+    return null;
+  }
+}

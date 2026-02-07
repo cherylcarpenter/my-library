@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "*.archive.org",
       },
+      {
+        hostname: "books.google.com",
+      },
     ],
   },
 };

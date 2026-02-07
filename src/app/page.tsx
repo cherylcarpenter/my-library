@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import BookCard, { Book } from '@/components/BookCard';
 import BookGrid from '@/components/BookGrid';
+import QuoteSlider from '@/components/QuoteSlider';
 import styles from './page.module.scss';
 
 async function getStats() {
@@ -40,38 +41,30 @@ export default async function HomePage() {
 
   return (
     <div className={styles.home}>
-      {/* Hero Section */}
-      <section className={styles.hero}>
-        <div className={styles.heroContent}>
-          <h1>Your Personal Library</h1>
-          <p>Track what you read, discover new books, and keep your reading journey organized.</p>
-          <Link href="/books" className={styles.ctaButton}>
-            Browse Library
-          </Link>
-        </div>
-      </section>
+      {/* Quote Slider */}
+      <QuoteSlider />
 
       {/* Stats Section */}
       {stats && (
         <section className={styles.stats}>
           <div className={styles.container}>
             <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
+              <Link href="/books?shelf=all" className={styles.statCard}>
                 <span className={styles.statNumber}>{stats.overview?.totalBooks || 0}</span>
                 <span className={styles.statLabel}>Total Books</span>
-              </div>
-              <div className={styles.statCard}>
+              </Link>
+              <Link href="/books?shelf=read" className={styles.statCard}>
                 <span className={styles.statNumber}>{stats.overview?.booksRead || 0}</span>
                 <span className={styles.statLabel}>Books Read</span>
-              </div>
-              <div className={styles.statCard}>
+              </Link>
+              <Link href="/books?shelf=currently-reading" className={styles.statCard}>
                 <span className={styles.statNumber}>{stats.byShelf?.CURRENTLY_READING || 0}</span>
                 <span className={styles.statLabel}>Currently Reading</span>
-              </div>
-              <div className={styles.statCard}>
+              </Link>
+              <Link href="/authors" className={styles.statCard}>
                 <span className={styles.statNumber}>{stats.overview?.authorCount || 0}</span>
                 <span className={styles.statLabel}>Authors</span>
-              </div>
+              </Link>
             </div>
           </div>
         </section>

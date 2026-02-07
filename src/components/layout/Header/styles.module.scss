@@ -21,18 +21,22 @@
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  color: #333333;
+  //color: #333333;
 }
 
 .logoIcon {
-  font-size: 1.75rem;
+  width: 28px;
+  height: 28px;
+  color: #8B5A2B !important;
+  fill: #8B5A2B !important;
 }
 
 .logoText {
-  font-family: var(--font-roboto), 'Roboto', sans-serif;
+  font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #8B5A2B;
+  letter-spacing: 0.02em;
 }
 
 .nav {

@@ -55,12 +55,16 @@ export async function GET(
       book => book.userBooks[0]?.shelf === 'READ'
     ).length;
     
+    // Note: series.bookCount from OpenLibrary enrichment is unreliable (just search result count)
+    // So we only use bookCount (books in library) for now
+    
     // Format response
     const response = {
       id: series.id,
       name: series.name,
       slug: series.slug,
       description: series.description,
+      openLibrarySlug: series.openLibrarySlug,
       bookCount,
       booksRead,
       completionPercentage: bookCount > 0 

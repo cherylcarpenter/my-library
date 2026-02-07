@@ -144,8 +144,17 @@
   margin-bottom: 0.5rem;
 }
 
-.shelfBadge {
+.bookStatus {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.dateRead {
+  font-size: 0.75rem;
+  color: #666666;
 }
 
 @media (max-width: 768px) {
@@ -157,9 +166,10 @@
     flex-wrap: wrap;
   }
 
-  .shelfBadge {
+  .bookStatus {
     width: 100%;
     margin-left: calc(40px + 60px + 2rem);
     margin-top: 0.5rem;
+    align-items: flex-start;
   }
 }

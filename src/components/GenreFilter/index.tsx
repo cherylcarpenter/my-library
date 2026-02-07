@@ -43,26 +43,24 @@ export default function GenreFilter({
 
   if (loading) {
     return (
-      <select className={`genre-filter ${className}`} disabled>
+      <select className={className} disabled>
         <option>Loading genres...</option>
       </select>
     );
   }
 
   return (
-    <div className="genre-filter-wrapper">
-      <select
-        value={selectedGenre || ''}
-        onChange={(e) => onGenreChange(e.target.value || null)}
-        className={`genre-filter ${className}`}
-      >
-        <option value="">All Genres</option>
-        {genres.map((genre) => (
-          <option key={genre.id} value={genre.slug}>
-            {genre.name} ({genre.bookCount})
-          </option>
-        ))}
-      </select>
-    </div>
+    <select
+      value={selectedGenre || ''}
+      onChange={(e) => onGenreChange(e.target.value || null)}
+      className={className}
+    >
+      <option value="">All Genres</option>
+      {genres.map((genre) => (
+        <option key={genre.id} value={genre.slug}>
+          {genre.name} ({genre.bookCount})
+        </option>
+      ))}
+    </select>
   );
 }

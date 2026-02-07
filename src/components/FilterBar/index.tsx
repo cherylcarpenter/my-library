@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import GenreFilter from '@/components/GenreFilter';
+import CategoryFilter from '@/components/CategoryFilter';
 import styles from './styles.module.scss';
 
 interface Shelf {
@@ -23,8 +23,26 @@ const sortOptions = [
   { value: 'title', label: 'Title A-Z' },
   { value: '-title', label: 'Title Z-A' },
   { value: '-dateRead', label: 'Recently Read' },
-  { value: '-rating', label: 'Highest Rated' },
   { value: '-createdAt', label: 'Recently Added' },
+];
+
+const formatOptions = [
+  { value: '', label: 'All Formats' },
+  { value: 'kindle', label: 'Kindle' },
+  { value: 'audible', label: 'Audible' },
+];
+
+const ratingOptions = [
+  { value: '', label: 'All Ratings' },
+  { value: '5', label: '5 Stars' },
+  { value: '4+', label: '4 & Up' },
+  { value: '4', label: '4 Stars' },
+  { value: '3+', label: '3 & Up' },
+  { value: '3', label: '3 Stars' },
+  { value: '2+', label: '2 & Up' },
+  { value: '2', label: '2 Stars' },
+  { value: '1+', label: '1 & Up' },
+  { value: '1', label: '1 Star' },
 ];
 
 export default function FilterBar({ basePath, shelves = [], showSort = true, showViewToggle = false }: FilterBarProps) {
@@ -32,15 +50,19 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
   const searchParams = useSearchParams();
   
   const currentShelf = searchParams.get('shelf') || 'read';
-  const currentSort = searchParams.get('sort') || '-createdAt';
+  const currentSort = searchParams.get('sort') || '-dateRead';
   const currentView = searchParams.get('view') || 'grid';
-  const currentGenre = searchParams.get('genre');
+  const currentCategory = searchParams.get('category');
+  const currentFormat = searchParams.get('kindle') ? 'kindle' : searchParams.get('audible') ? 'audible' : '';
+  const currentRating = searchParams.get('rating') || '';
 
-  // Check if any filters are active
-  const hasActiveFilters = 
-    currentShelf !== 'read' || 
-    currentSort !== '-createdAt' ||
-    currentGenre !== null;
+  // Check if any filters are active (not at default state)
+  const hasActiveFilters =
+    currentShelf !== 'read' ||
+    currentSort !== '-dateRead' ||
+    currentCategory !== null ||
+    currentFormat !== '' ||
+    currentRating !== '';
 
   // Add shelf parameter to URL if not present (without redirect)
   useEffect(() => {
@@ -63,13 +85,7 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
   };
 
   const clearFilters = () => {
-    const params = new URLSearchParams();
-    params.set('shelf', 'read');
-    params.set('sort', '-createdAt');
-    if (currentView !== 'grid') {
-      params.set('view', currentView);
-    }
-    router.push(`${basePath}?${params.toString()}`);
+    router.push(`${basePath}?shelf=read&sort=-dateRead`);
   };
 
   return (
@@ -88,10 +104,45 @@ export default function FilterBar({ basePath, shelves = [], showSort = true, sho
           ))}
         </select>
 
-        <GenreFilter
-          selectedGenre={currentGenre}
-          onGenreChange={(genre) => updateFilter('genre', genre || '')}
+        <CategoryFilter
+          selectedCategory={currentCategory}
+          onCategoryChange={(category) => updateFilter('category', category || '')}
+          className={styles.select}
         />
+
+        <select
+          className={styles.select}
+          value={currentFormat}
+          onChange={(e) => {
+            const value = e.target.value;
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('kindle');
+            params.delete('audible');
+            if (value) {
+              params.set(value, 'true');
+            }
+            params.delete('page');
+            router.push(`${basePath}?${params.toString()}`);
+          }}
+        >
+          {formatOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className={styles.select}
+          value={currentRating}
+          onChange={(e) => updateFilter('rating', e.target.value)}
+        >
+          {ratingOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
 
         {showSort && (
           <select
