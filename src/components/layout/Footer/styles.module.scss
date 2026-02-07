@@ -18,6 +18,14 @@
   font-family: var(--font-roboto), 'Roboto', sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
 }
 
 .tagline {
@@ -49,7 +57,7 @@
     transition: color 0.2s;
 
     &:hover {
-      color: #8B5A2B;
+      color: #d0a780;
     }
   }
 }

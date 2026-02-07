@@ -1,12 +1,28 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.link {
+  text-decoration: none;
+  
+  &:hover {
+    opacity: 0.9;
+  }
 }
 
 .default {
@@ -19,13 +35,27 @@
   color: white;
 }
 
+.link.shelf {
+  cursor: pointer;
+  
+  &:hover {
+    background: #C4A77D;
+    color: white;
+  }
+}
+
 .kindle {
-  background: #FF9900;
+  background: #60ae09;
   color: white;
 }
 
 .audible {
   background: #F8991C;
+  color: white;
+}
+
+.audible-exclusive {
+  background: #7C3AED;
   color: white;
 }
 

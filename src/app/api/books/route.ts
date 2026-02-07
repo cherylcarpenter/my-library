@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const rating = searchParams.get('rating');
     const ownedKindle = searchParams.get('kindle');
     const ownedAudible = searchParams.get('audible');
-    const genre = searchParams.get('genre'); // Genre slug filter
+    const category = searchParams.get('category'); // Category slug filter
     
     // Sorting - support `-field` for descending
     let sortParam = searchParams.get('sort') || 'dateAdded';
@@ -37,17 +37,27 @@ export async function GET(request: NextRequest) {
     // Build where clause for UserBook
     const userBookWhere: Record<string, unknown> = {};
     if (shelf) userBookWhere.shelf = shelf;
-    if (rating) userBookWhere.myRating = parseInt(rating);
+    if (rating) {
+      // Support "X+" format for "X and up" (e.g., "4+" means 4 or higher)
+      if (rating.endsWith('+')) {
+        const minRating = parseInt(rating.slice(0, -1));
+        userBookWhere.myRating = { gte: minRating };
+      } else {
+        userBookWhere.myRating = parseInt(rating);
+      }
+    }
     if (ownedKindle === 'true') userBookWhere.ownedKindle = true;
     if (ownedAudible === 'true') userBookWhere.ownedAudible = true;
     
-    // Build where clause for Book (including genre filter)
+    // Build where clause for Book (including category filter)
     const bookWhere: Record<string, unknown> = {};
-    if (genre) {
+    if (category) {
       bookWhere.genres = {
         some: {
           genre: {
-            slug: genre
+            category: {
+              slug: category
+            }
           }
         }
       };

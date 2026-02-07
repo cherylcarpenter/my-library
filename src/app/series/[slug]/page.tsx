@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Badge from '@/components/Badge';
 import RatingStars from '@/components/RatingStars';
+import SeriesBibliography from '@/components/SeriesBibliography';
 import styles from './page.module.scss';
 
 interface SeriesBook {
@@ -10,9 +11,11 @@ interface SeriesBook {
   slug: string;
   title: string;
   coverUrl?: string;
-  position?: number;
+  seriesOrder?: number;
   rating?: number;
+  averageRating?: number;
   shelf?: string;
+  userBook?: { shelf: string; myRating?: number; dateRead?: string | null } | null;
   authors: { id: string; name: string; slug: string }[];
 }
 
@@ -24,6 +27,16 @@ interface SeriesDetail {
   bookCount: number;
   booksRead: number;
   completionPercentage: number;
+}
+
+function formatDateRead(dateString: string | null | undefined): string | null {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } catch {
+    return null;
+  }
 }
 
 async function getSeriesDetail(slug: string): Promise<SeriesDetail | null> {
@@ -47,9 +60,9 @@ export default async function SeriesDetailPage({
     notFound();
   }
 
-  // Sort books by position
+  // Sort books by series order
   const sortedBooks = [...series.books].sort((a, b) => 
-    (a.position || 999) - (b.position || 999)
+    (a.seriesOrder || 999) - (b.seriesOrder || 999)
   );
 
   return (
@@ -61,7 +74,7 @@ export default async function SeriesDetailPage({
         <header className={styles.header}>
           <h1>{series.name}</h1>
           <p className={styles.subtitle}>
-            {series.bookCount} {series.bookCount === 1 ? 'book' : 'books'} in series
+            {series.bookCount} {series.bookCount === 1 ? 'book' : 'books'} in your library
           </p>
           
           <div className={styles.progress}>
@@ -85,7 +98,7 @@ export default async function SeriesDetailPage({
               className={styles.bookItem}
             >
               <div className={styles.position}>
-                {book.position || '—'}
+                {book.seriesOrder || '—'}
               </div>
               
               <div className={styles.cover}>
@@ -107,19 +120,28 @@ export default async function SeriesDetailPage({
                 <p className={styles.authors}>
                   {book.authors.map(a => a.name).join(', ')}
                 </p>
-                {book.rating && (
-                  <RatingStars rating={book.rating} size="sm" />
+                {(book.userBook?.myRating || book.averageRating) && (
+                  <RatingStars rating={book.userBook?.myRating || book.averageRating || 0} size="sm" />
                 )}
               </div>
 
-              {book.shelf && (
-                <div className={styles.shelfBadge}>
-                  <Badge variant="shelf">{book.shelf}</Badge>
-                </div>
-              )}
+              <div className={styles.bookStatus}>
+                {book.userBook?.shelf && (
+                  <Badge variant="shelf">
+                    {book.userBook.shelf.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </Badge>
+                )}
+                {book.userBook?.shelf === 'READ' && book.userBook.dateRead && (
+                  <div className={styles.dateRead}>
+                    Read {formatDateRead(book.userBook.dateRead)}
+                  </div>
+                )}
+              </div>
             </Link>
           ))}
         </section>
+
+        <SeriesBibliography seriesSlug={series.slug} seriesName={series.name} />
       </div>
     </div>
   );

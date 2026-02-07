@@ -11,17 +11,28 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     
     // Sorting
-    const sort = searchParams.get('sort') || 'name';
+    const sort = searchParams.get('sort') || 'lastName';
     const order = searchParams.get('order') || 'asc';
     
+    // Letter filter (A-Z)
+    const letter = searchParams.get('letter');
+    
+    // Build where clause
+    const where: any = {};
+    if (letter) {
+      where.lastName = { startsWith: letter, mode: 'insensitive' };
+    }
+    
     // Get total count
-    const total = await prisma.author.count();
+    const total = await prisma.author.count({ where });
     
     // Get authors with book count
     const authors = await prisma.author.findMany({
+      where,
       select: {
         id: true,
         name: true,
+        lastName: true,
         slug: true,
         photoUrl: true,
         _count: {
@@ -32,6 +43,8 @@ export async function GET(request: NextRequest) {
       },
       orderBy: sort === 'bookCount'
         ? { books: { _count: order as 'asc' | 'desc' } }
+        : sort === 'lastName'
+        ? { lastName: order }
         : { [sort]: order },
       skip,
       take: limit
@@ -41,6 +54,7 @@ export async function GET(request: NextRequest) {
     const formattedAuthors = authors.map(author => ({
       id: author.id,
       name: author.name,
+      lastName: author.lastName,
       slug: author.slug,
       photoUrl: author.photoUrl,
       bookCount: author._count.books

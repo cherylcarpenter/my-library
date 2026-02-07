@@ -1,0 +1,55 @@
+.letterFilter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.letters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #666;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #e8e8e8;
+    color: #333;
+    border-color: #ccc;
+  }
+
+  &.active {
+    background: #8B5A2B;
+    color: white;
+    border-color: #8B5A2B;
+  }
+}
+
+.clearBtn {
+  font-size: 0.75rem;
+  color: #8B5A2B;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover {
+    color: #6d4622;
+  }
+}

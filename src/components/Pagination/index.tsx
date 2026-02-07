@@ -9,15 +9,30 @@ interface PaginationProps {
   basePath: string;
 }
 
+const perPageOptions = [
+  { value: '12', label: '12 per page' },
+  { value: '24', label: '24 per page' },
+  { value: '48', label: '48 per page' },
+  { value: '96', label: '96 per page' },
+];
+
 export default function Pagination({ currentPage, totalPages, basePath }: PaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentPerPage = searchParams.get('perPage') || '24';
 
   if (totalPages <= 1) return null;
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
+    router.push(`${basePath}?${params.toString()}`);
+  };
+
+  const updatePerPage = (perPage: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('perPage', perPage);
+    params.delete('page'); // Reset to page 1 when changing results per page
     router.push(`${basePath}?${params.toString()}`);
   };
 
@@ -47,6 +62,19 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
 
   return (
     <nav className={styles.pagination}>
+      <select
+        className={styles.perPageSelect}
+        value={currentPerPage}
+        onChange={(e) => updatePerPage(e.target.value)}
+        aria-label="Results per page"
+      >
+        {perPageOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
       <button
         className={styles.arrow}
         onClick={() => goToPage(currentPage - 1)}

@@ -1,203 +1,207 @@
 /**
- * Enrich books with OpenLibrary data
- * Fetches cover images, descriptions, and OpenLibrary IDs
- *
- * Usage:
- *   npx tsx scripts/enrich-books.ts           # Process all pending books
- *   npx tsx scripts/enrich-books.ts --dry     # Dry run (no database writes)
- *   npx tsx scripts/enrich-books.ts --limit 100  # Process only 100 books
+ * Combined Book Enrichment Script - Simplified
+ * Uses OpenLibrary + Google Books with author validation
+ * 
+ * Run with: npx tsx scripts/enrich-books.ts
+ * 
+ * Options:
+ *   --dry-run     Preview only, don't save
+ *   --limit N     Process only N books
  */
 
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import {
-  searchByISBN,
-  searchByTitleAuthor,
-  getCoverUrl,
-  extractDescription,
-  extractOpenLibraryId,
-} from '../src/lib/openlibrary';
+import * as openlibrary from '../src/lib/openlibrary';
+import * as googlebooks from '../src/lib/googlebooks';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
-function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is not set');
-  }
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const pool = new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
-
-  return new PrismaClient({
-    adapter,
-    log: ['error'],
-  });
-}
-
-const prisma = globalForPrisma.prisma ?? createPrismaClient();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-interface Options {
+interface Args {
   dryRun?: boolean;
   limit?: number;
 }
 
-async function enrichBooks(options: Options = {}) {
-  const { dryRun = false, limit } = options;
+async function getArgs(): Promise<Args> {
+  const args: Args = {};
+  if (process.argv.includes('--dry-run')) args.dryRun = true;
+  
+  const limitArg = process.argv.find(arg => arg.startsWith('--limit='));
+  if (limitArg) args.limit = parseInt(limitArg.split('=')[1]);
+  
+  return args;
+}
 
-  console.log(`🔍 Enriching books from OpenLibrary...`);
-  console.log(`   Mode: ${dryRun ? 'DRY RUN (no changes)' : 'LIVE'}`);
-
-  // Build query for pending books
-  const whereClause: any = {
-    enrichmentStatus: 'PENDING',
-  };
-
-  // Get total count first
-  const totalPending = await prisma.book.count({ where: whereClause });
-  console.log(`   Total pending: ${totalPending}`);
-
-  if (totalPending === 0) {
-    console.log('✅ No books to enrich');
-    return;
+/**
+ * Validate author match between target and source
+ */
+function validateAuthorMatch(targetAuthor: string, sourceAuthors: string[]): number {
+  if (!targetAuthor || !sourceAuthors || sourceAuthors.length === 0) {
+    return 0;
   }
+  
+  const targetLower = targetAuthor.toLowerCase();
+  const targetParts = targetLower.split(' ');
+  const targetLastName = targetParts[targetParts.length - 1];
+  
+  for (const author of sourceAuthors) {
+    const authorLower = author.toLowerCase();
+    const authorParts = authorLower.split(' ');
+    const authorLastName = authorParts[authorParts.length - 1];
+    
+    // Exact match
+    if (authorLower === targetLower) {
+      return 100;
+    }
+    
+    // Last name match
+    if (targetLastName && authorLastName === targetLastName) {
+      return 80;
+    }
+    
+    // Partial match
+    if (authorLower.includes(targetLower) || targetLower.includes(authorLower)) {
+      return 30;
+    }
+  }
+  
+  return 0;
+}
 
-  // Fetch books in batches
-  const take = limit || 100;
+async function main() {
+  const args = await getArgs();
+  const dryRun = args.dryRun || false;
+  const limit = args.limit || 100;
+  
+  console.log('=== Combined Book Enrichment (OL + Google Books) ===');
+  console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}\n`);
+  
+  // Find books needing enrichment
+  const books = await prisma.book.findMany({
+    where: {
+      OR: [
+        { description: null },
+        { enrichmentStatus: 'PENDING' },
+        { enrichmentStatus: 'PARTIAL' }
+      ]
+    },
+    include: {
+      authors: {
+        include: {
+          author: { select: { name: true } }
+        }
+      }
+    },
+    take: limit
+  });
+  
+  console.log(`Found ${books.length} books needing enrichment\n`);
+  
   let processed = 0;
-  let enriched = 0;
-  let notFound = 0;
-  let failed = 0;
+  let updated = 0;
   let skipped = 0;
-
-  while (true) {
-    const books = await prisma.book.findMany({
-      where: whereClause,
-      take,
-      skip: processed,
-      include: {
-        authors: {
-          include: {
-            author: true,
-          },
-        },
-      },
-    });
-
-    if (books.length === 0) break;
-
-    for (const book of books) {
-      processed++;
-      const authorName = book.authors[0]?.author?.name;
-
-      console.log(`\n[${processed}/${totalPending}] ${book.title}${authorName ? ` by ${authorName}` : ''}`);
-
-      try {
-        let olData = null;
-
-        // Try ISBN first (primary method)
-        if (book.isbn) {
-          olData = await searchByISBN(book.isbn);
-        }
-
-        // Fallback to title + author search
-        if (!olData) {
-          olData = await searchByTitleAuthor(book.title, authorName);
-        }
-
-        if (olData) {
-          const description = extractDescription(olData.description);
-          const openLibraryId = extractOpenLibraryId(olData);
-          const coverUrl = book.isbn ? getCoverUrl(book.isbn, 'L') : null;
-
-          const updates: any = {
-            enrichedAt: new Date(),
-          };
-
-          // Determine enrichment status
-          if (description || coverUrl || openLibraryId) {
-            updates.enrichmentStatus = 'ENRICHED';
-          } else {
-            updates.enrichmentStatus = 'PARTIAL';
-          }
-
-          // Only update if we have data
-          if (openLibraryId) updates.openLibraryId = openLibraryId;
-          if (description) updates.description = description;
-          if (coverUrl) updates.coverUrl = coverUrl;
-
-          if (!dryRun) {
-            await prisma.book.update({
-              where: { id: book.id },
-              data: updates,
-            });
-          }
-
-          enriched++;
-          console.log(`   ✓ Enriched: OLID=${openLibraryId || '?'}, desc=${description ? 'yes' : 'no'}, cover=${coverUrl ? 'yes' : 'no'}`);
+  let googleSuccess = 0;
+  let openlibrarySuccess = 0;
+  
+  for (const book of books) {
+    processed++;
+    const authorName = book.authors[0]?.author?.name || '';
+    const isbn = book.isbn;
+    
+    console.log(`[${processed}/${books.length}] ${book.title}`);
+    
+    // Try Google Books first
+    let gbData = null;
+    let gbCover = null;
+    let gbDesc = null;
+    
+    if (isbn) {
+      gbData = await googlebooks.searchByISBN(isbn);
+    }
+    
+    if (gbData) {
+      gbCover = googlebooks.getCoverUrl(gbData.imageLinks?.thumbnail);
+      gbDesc = gbData.description;
+      const gbAuthorMatch = validateAuthorMatch(authorName, gbData.authors || []);
+      
+      if (gbAuthorMatch >= 30) {
+        if (dryRun) {
+          console.log(`  ✓ [GB] cover=${!!gbCover}, desc=${!!gbDesc}, authorMatch=${gbAuthorMatch}%`);
         } else {
-          if (!dryRun) {
-            await prisma.book.update({
-              where: { id: book.id },
-              data: {
-                enrichedAt: new Date(),
-                enrichmentStatus: 'NOT_FOUND',
-              },
-            });
-          }
-          notFound++;
-          console.log(`   ✗ Not found in OpenLibrary`);
-        }
-      } catch (error) {
-        if (!dryRun) {
           await prisma.book.update({
             where: { id: book.id },
             data: {
+              coverUrl: gbCover || book.coverUrl,
+              description: gbDesc || book.description,
               enrichedAt: new Date(),
-              enrichmentStatus: 'FAILED',
-            },
+              enrichmentStatus: 'ENRICHED'
+            }
           });
+          console.log(`  ✓ [GB] Updated: cover=${!!gbCover}, desc=${!!gbDesc}`);
+          googleSuccess++;
+          updated++;
+          await delay(100);
+          continue; // Skip OpenLibrary if GB worked
         }
-        failed++;
-        console.error(`   ! Error:`, error instanceof Error ? error.message : 'Unknown error');
       }
-
-      // Progress percentage
-      const pct = Math.round((processed / Math.min(totalPending, limit || totalPending)) * 100);
-      process.stdout.write(`   Progress: ${pct}%\r`);
     }
-
-    // Stop if we hit the limit
-    if (limit && processed >= limit) break;
+    
+    // Try OpenLibrary as fallback
+    let olData = null;
+    if (isbn) {
+      olData = await openlibrary.searchByISBN(isbn);
+    }
+    
+    if (olData) {
+      const olCover = isbn ? openlibrary.getCoverUrl(isbn) : null;
+      const olDesc = openlibrary.extractDescription(olData.notes || olData.description);
+      const olAuthorMatch = validateAuthorMatch(authorName, olData.authors?.map((a: any) => a.name) || []);
+      
+      if (olAuthorMatch >= 30) {
+        if (dryRun) {
+          console.log(`  ✓ [OL] cover=${!!olCover}, desc=${!!olDesc}, authorMatch=${olAuthorMatch}%`);
+        } else {
+          await prisma.book.update({
+            where: { id: book.id },
+            data: {
+              coverUrl: olCover || book.coverUrl,
+              description: olDesc || book.description,
+              enrichedAt: new Date(),
+              enrichmentStatus: 'ENRICHED'
+            }
+          });
+          console.log(`  ✓ [OL] Updated: cover=${!!olCover}, desc=${!!olDesc}`);
+          openlibrarySuccess++;
+          updated++;
+        }
+      } else {
+        console.log(`  - [OL] Author match too low: ${olAuthorMatch}%`);
+        skipped++;
+      }
+    } else {
+      console.log(`  - No data found`);
+      skipped++;
+    }
+    
+    await delay(100);
   }
-
-  console.log('\n' + '='.repeat(50));
-  console.log('📊 Summary:');
-  console.log(`   Processed: ${processed}`);
-  console.log(`   Enriched: ${enriched}`);
-  console.log(`   Not Found: ${notFound}`);
-  console.log(`   Failed: ${failed}`);
-  console.log('='.repeat(50));
-
+  
+  console.log('\n=== Summary ===');
+  console.log(`Processed: ${processed}`);
+  console.log(`Updated: ${updated}`);
+  console.log(`  - Google Books: ${googleSuccess}`);
+  console.log(`  - OpenLibrary: ${openlibrarySuccess}`);
+  console.log(`Skipped: ${skipped}`);
+  
   if (dryRun) {
-    console.log('\n⚠️  This was a dry run. Run without --dry to apply changes.');
-  } else {
-    console.log('\n✅ Enrichment complete!');
+    console.log('\n[DRY RUN] No changes were made.');
   }
 }
 
-// Parse command line args
-const args = process.argv.slice(2);
-const options: Options = {
-  dryRun: args.includes('--dry') || args.includes('-d'),
-  limit: args.includes('--limit')
-    ? parseInt(args[args.indexOf('--limit') + 1], 10)
-    : undefined,
-};
-
-enrichBooks(options).catch(console.error);
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

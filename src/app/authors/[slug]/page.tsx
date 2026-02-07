@@ -3,7 +3,22 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import BookCard, { Book } from '@/components/BookCard';
 import BookGrid from '@/components/BookGrid';
+import AuthorBibliography from '@/components/AuthorBibliography';
 import styles from './page.module.scss';
+
+// Strip HTML tags from OpenLibrary bios
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .trim();
+}
 
 interface AuthorDetail {
   id: string;
@@ -102,12 +117,12 @@ export default async function AuthorDetailPage({
         {author.bio && (
           <section className={styles.bio}>
             <h2>About {author.name.split(' ')[0]}</h2>
-            <p>{author.bio}</p>
+            <p style={{ whiteSpace: 'pre-wrap' }}>{stripHtml(author.bio)}</p>
           </section>
         )}
 
         <section className={styles.books}>
-          <h2>Books by {author.name}</h2>
+          <h2>In Your Library</h2>
           {author.books.length > 0 ? (
             <BookGrid>
               {author.books.map((book) => (
@@ -118,6 +133,8 @@ export default async function AuthorDetailPage({
             <p className={styles.empty}>No books found</p>
           )}
         </section>
+
+        <AuthorBibliography authorSlug={author.slug} authorName={author.name} />
       </div>
     </div>
   );

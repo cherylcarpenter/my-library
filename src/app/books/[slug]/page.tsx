@@ -6,6 +6,20 @@ import RatingStars from '@/components/RatingStars';
 import GenreTag from '@/components/GenreTag';
 import styles from './page.module.scss';
 
+// Strip HTML tags from OpenLibrary descriptions
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .trim();
+}
+
 interface BookDetail {
   id: string;
   slug: string;
@@ -121,7 +135,9 @@ export default async function BookDetailPage({
 
             {book.shelf && (
               <div className={styles.shelf}>
-                <Badge variant="shelf">{book.shelf}</Badge>
+                <Badge variant="shelf">
+                  {book.shelf.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </Badge>
               </div>
             )}
 
@@ -183,7 +199,7 @@ export default async function BookDetailPage({
             {book.description && (
               <div className={styles.description}>
                 <h2>Description</h2>
-                <p>{book.description}</p>
+                <p style={{ whiteSpace: 'pre-wrap' }}>{stripHtml(book.description)}</p>
               </div>
             )}
 

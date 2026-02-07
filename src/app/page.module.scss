@@ -8,51 +8,8 @@
   padding: 0 1.5rem;
 }
 
-.hero {
-  background: linear-gradient(135deg, #8B5A2B 0%, #6B4423 100%);
-  color: white;
-  padding: 5rem 1.5rem;
-  text-align: center;
-}
-
-.heroContent {
-  max-width: 600px;
-  margin: 0 auto;
-
-  h1 {
-    font-family: var(--font-roboto), 'Roboto', sans-serif;
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: white;
-  }
-
-  p {
-    font-size: 1.25rem;
-    opacity: 0.9;
-    margin-bottom: 2rem;
-    color: white;
-  }
-}
-
-.ctaButton {
-  display: inline-block;
-  background: white;
-  color: #8B5A2B;
-  padding: 0.875rem 2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-}
-
 .stats {
-  background: #F5F5F5;
+  background: #8b5a2b;
   padding: 3rem 0;
   margin-bottom: 1rem;
 }
@@ -69,6 +26,14 @@
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: block;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .statNumber {
@@ -113,14 +78,6 @@
 }
 
 @media (max-width: 768px) {
-  .heroContent h1 {
-    font-size: 2rem;
-  }
-
-  .heroContent p {
-    font-size: 1rem;
-  }
-
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -131,10 +88,6 @@
 }
 
 @media (max-width: 480px) {
-  .hero {
-    padding: 3rem 1rem;
-  }
-
   .statsGrid {
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
