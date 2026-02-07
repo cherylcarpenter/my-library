@@ -152,13 +152,9 @@ export function getCoverUrl(thumbnail?: string): string | null {
 export function extractDescription(
   description?: string,
   authors?: string[]
-): { description: string | null; authorMatch: boolean } | null {
-  if (!description && (!authors || authors.length === 0)) {
-    return null;
-  }
-
+): { description: string | null; authorMatch: boolean } {
   return {
     description: description?.trim() || null,
-    authorMatch: authors && authors.length > 0
+    authorMatch: !!(authors && authors.length > 0)
   };
 }

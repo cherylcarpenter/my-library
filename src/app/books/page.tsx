@@ -121,13 +121,13 @@ export default async function BooksPage({
           <>
             {viewMode === 'list' ? (
               <div className={styles.listView}>
-                {data.books.map((book: Book) => (
+                {data.books.map((book: BookType) => (
                   <BookCard key={book.id} book={book} variant="list" />
                 ))}
               </div>
             ) : (
               <BookGrid>
-                {data.books.map((book: Book) => (
+                {data.books.map((book: BookType) => (
                   <BookCard key={book.id} book={book} />
                 ))}
               </BookGrid>

@@ -122,8 +122,8 @@ async function main() {
       const authorName = author.name;
       
       // Find book with OpenLibrary ID (preferred) or ISBN
-      let bookWithOlid = author.books.find(ba => ba.book.openlibraryId);
-      let bookWithIsbn = author.books.find(ba => ba.book.isbn && !ba.book.openlibraryId);
+      const bookWithOlid = author.books.find(ba => ba.book.openLibraryId);
+      const bookWithIsbn = author.books.find(ba => ba.book.isbn && !ba.book.openLibraryId);
       
       if (!bookWithOlid && !bookWithIsbn) {
         console.log(`[${processed}] ${authorName} - no ISBN/OLID`);

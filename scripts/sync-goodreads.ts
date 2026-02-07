@@ -18,7 +18,8 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import { readFileSync, existsSync, mkdirSync, unlinkSync, execSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
+import { execSync } from 'child_process';
 import { join } from 'path';
 import {
   slugify,
@@ -126,8 +127,8 @@ function rotateBackups(): void {
   try {
     const { globSync } = require('glob');
     const backups = globSync(join(BACKUP_DIR, 'my-library-backup-*.sql'))
-      .map(path => ({ path, time: require('fs').statSync(path).mtime }))
-      .sort((a, b) => a.time.getTime() - b.time.getTime());
+      .map((path: string) => ({ path, time: require('fs').statSync(path).mtime }))
+      .sort((a: { path: string; time: Date }, b: { path: string; time: Date }) => a.time.getTime() - b.time.getTime());
     
     while (backups.length > MAX_BACKUPS) {
       const oldest = backups.shift();
@@ -216,7 +217,7 @@ function parseCsvLine(line: string): string[] {
   return values;
 }
 
-async function loadGoodreadsCsv(path: string): Promise<GoodreadsBook[]> {
+function loadGoodreadsCsv(path: string): GoodreadsBook[] {
   const content = readFileSync(path, 'utf-8');
   const lines = content.split('\n');
   const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
@@ -239,13 +240,13 @@ async function loadGoodreadsCsv(path: string): Promise<GoodreadsBook[]> {
       pages: parseInt(values[getIdx('Number of Pages')]) || null,
       yearPublished: parseInt(values[getIdx('Year Published')]) || null,
       originalPublicationYear: parseInt(values[getIdx('Original Publication Year')]) || null,
-      publisher: values[getIdx('Publisher')] || null,
-      binding: values[getIdx('Binding')] || null,
+      publisher: values[getIdx('Publisher')] || undefined,
+      binding: values[getIdx('Binding')] || undefined,
       dateRead: values[getIdx('Date Read')] || null,
       readCount: parseInt(values[getIdx('Read Count')]) || null,
       exclusiveShelf: values[getIdx('Exclusive Shelf')] || 'to-read',
       myReview: values[getIdx('My Review')] || null,
-      bookshelves: values[getIdx('Bookshelves')]?.split(',').map(s => s.trim()).filter(Boolean) || [],
+      bookshelves: values[getIdx('Bookshelves')]?.split(',').map((s: string) => s.trim()).filter(Boolean) || [],
     });
   }
   return books;
@@ -515,7 +516,7 @@ async function main() {
     try {
       const isbn = normalizeIsbn(grBook.isbn);
       const isbn13 = normalizeIsbn(grBook.isbn13);
-      let existingBook = isbnMap.get(isbn || '') || isbnMap.get(isbn13 || '');
+      let existingBook: typeof existingBooks[0] | undefined = isbnMap.get(isbn || '') || isbnMap.get(isbn13 || '');
       
       if (!existingBook) {
         const grNormTitle = normalizeTitle(grBook.title);
@@ -528,7 +529,7 @@ async function main() {
             bestMatch = book;
           }
         }
-        existingBook = bestMatch;
+        existingBook = bestMatch || undefined;
         if (existingBook) result.matchedByTitle++;
       } else {
         result.matchedByIsbn++;
@@ -567,13 +568,8 @@ async function main() {
             create: {
               name: seriesName,
               slug: seriesSlug,
-              bookCount: seriesEnrichment.bookCount,
-              openLibrarySlug: seriesEnrichment.openLibrarySlug,
             },
-            update: {
-              bookCount: seriesEnrichment.bookCount,
-              openLibrarySlug: seriesEnrichment.openLibrarySlug,
-            },
+            update: {},
           });
           seriesId = series.id;
         }
