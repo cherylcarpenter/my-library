@@ -89,7 +89,8 @@ export async function GET(request: NextRequest) {
     
     // For userBook sorts, we need to fetch more and sort in memory
     const needsMemorySort = validUserBookSorts.includes(sort);
-    const fetchLimit = needsMemorySort ? Math.min(total, 100) : limit;
+    // Fetch all books for memory sorting to ensure books with recent dates aren't missed
+    const fetchLimit = needsMemorySort ? total : limit;
     const fetchSkip = needsMemorySort ? 0 : skip;
     
     // Get books with relations
