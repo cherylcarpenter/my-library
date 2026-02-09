@@ -23,7 +23,7 @@ const sortOptions = [
   { value: 'title', label: 'Title A-Z' },
   { value: '-title', label: 'Title Z-A' },
   { value: '-dateRead', label: 'Recently Read' },
-  { value: '-createdAt', label: 'Recently Added' },
+  { value: '-dateAdded', label: 'Recently Added' },
 ];
 
 const formatOptions = [

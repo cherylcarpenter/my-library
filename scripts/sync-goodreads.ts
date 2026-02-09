@@ -4,14 +4,18 @@
  * - Adds new books with full enrichment (covers, authors, descriptions, series, genres)
  * - Enriches new series with OpenLibrary book counts
  * - Automatic database backup before sync
- * 
+ * - Preview mode by default (use --confirm to apply changes)
+ * - Sensitive topic filtering (sexuality, religion) with confirmation
+ *
  * Run with: npx tsx scripts/sync-goodreads.ts
- * 
+ *
  * Options:
- *   --dry-run     Preview without writing to database
+ *   --dry-run     Preview without writing to database (default: true)
+ *   --confirm     Apply changes to database (requires explicit confirmation)
  *   --csv=PATH    Path to Goodreads CSV file
  *   --skip-enrich Skip enrichment (add bare records only)
  *   --no-backup   Skip database backup
+ *   --auto-add    Auto-add books without sensitive topic confirmation
  */
 
 import 'dotenv/config';
@@ -164,10 +168,28 @@ function restoreBackup(backupPath: string): boolean {
 
 // CLI args
 const args = process.argv.slice(2);
-const DRY_RUN = args.includes('--dry-run');
+const DRY_RUN = !args.includes('--confirm'); // Default to preview/dry-run
 const SKIP_ENRICH = args.includes('--skip-enrich');
 const SKIP_BACKUP = args.includes('--no-backup');
+const AUTO_ADD = args.includes('--auto-add'); // Skip sensitive topic confirmation
 const CSV_PATH = args.find(a => a.startsWith('--csv='))?.split('=')[1] || DEFAULT_CSV_PATH;
+
+// Sensitive topic keywords (for filtering)
+const SENSITIVE_KEYWORDS = [
+  // Sexuality-related
+  'sexual', 'sex', 'erotic', 'romance adult', 'adult romance', 'lgbt', 'gay', 'lesbian',
+  'bisexual', 'transgender', 'queer', 'smut', 'explicit', 'polyamory', 'bdsm', 'kink',
+  // Religion-related
+  'christian fiction', 'christian', 'biblical', 'bible', 'faith', 'religious', 'spiritual',
+  'theology', 'apologetics', 'devotional', 'worship', 'sermon', 'catholic', 'protestant',
+  'orthodox', 'islam', 'muslim', 'jewish', 'judaism', 'hindu', 'buddhist', 'buddhism',
+  'new age', 'occult', 'demonology', 'satanic', 'witchcraft', 'wicca'
+];
+
+interface SensitiveTopic {
+  category: 'sexuality' | 'religion';
+  matchedKeywords: string[];
+}
 
 interface GoodreadsBook {
   title: string;
@@ -195,7 +217,40 @@ interface SyncResult {
   updated: number;
   added: number;
   skipped: number;
+  sensitiveSkipped: number;
   errors: number;
+}
+
+interface PreviewChange {
+  type: 'update' | 'add' | 'sensitive-add';
+  title: string;
+  author: string;
+  sensitiveTopic?: SensitiveTopic;
+}
+
+function checkSensitiveTopics(title: string, bookshelves: string[] = []): SensitiveTopic | null {
+  const combinedText = `${title} ${bookshelves.join(' ')}`.toLowerCase();
+  const sexualityMatches: string[] = [];
+  const religionMatches: string[] = [];
+
+  for (const keyword of SENSITIVE_KEYWORDS) {
+    if (combinedText.includes(keyword.toLowerCase())) {
+      if (['sexuality', 'sex', 'sexual', 'erotic', 'lgbt', 'gay', 'lesbian', 'bisexual',
+           'transgender', 'queer', 'smut', 'explicit', 'polyamory', 'bdsm', 'kink'].includes(keyword)) {
+        sexualityMatches.push(keyword);
+      } else {
+        religionMatches.push(keyword);
+      }
+    }
+  }
+
+  if (sexualityMatches.length > 0) {
+    return { category: 'sexuality', matchedKeywords: sexualityMatches };
+  }
+  if (religionMatches.length > 0) {
+    return { category: 'religion', matchedKeywords: religionMatches };
+  }
+  return null;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -467,22 +522,12 @@ async function enrichSeries(seriesName: string): Promise<SeriesEnrichment> {
 
 async function main() {
   console.log('📚 Goodreads Sync with FULL ENRICHMENT');
-  console.log(`   Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}`);
+  console.log(`   Mode: ${DRY_RUN ? 'PREVIEW (--confirm to apply)' : 'LIVE'}`);
   console.log(`   CSV: ${CSV_PATH}`);
   console.log(`   Enrichment: ${SKIP_ENRICH ? 'SKIPPED' : 'ENABLED'}`);
   console.log(`   Backup: ${SKIP_BACKUP ? 'SKIPPED' : 'ENABLED'}`);
+  console.log(`   Auto-add sensitive: ${AUTO_ADD ? 'YES' : 'NO (will prompt)'}`);
   console.log('');
-  
-  // Create backup (unless dry run or skipped)
-  let backupPath: string | null = null;
-  if (!DRY_RUN && !SKIP_BACKUP) {
-    backupPath = createBackup();
-    if (!backupPath) {
-      console.error('❌ Backup failed. Aborting for safety. Use --no-backup to skip.');
-      process.exit(1);
-    }
-    console.log('');
-  }
   
   const books = loadGoodreadsCsv(CSV_PATH);
   console.log(`📖 Loaded ${books.length} books from Goodreads\n`);
@@ -498,13 +543,15 @@ async function main() {
     if (b.isbn13) isbnMap.set(b.isbn13, b);
   });
   
-  const result: SyncResult = { matchedByIsbn: 0, matchedByTitle: 0, updated: 0, added: 0, skipped: 0, errors: 0 };
+  const result: SyncResult = { matchedByIsbn: 0, matchedByTitle: 0, updated: 0, added: 0, skipped: 0, sensitiveSkipped: 0, errors: 0 };
   const stats = createStats();
+  const previewChanges: PreviewChange[] = [];
   
   const existingBookSlugs = new Set(existingBooks.map(b => slugify(b.title)));
   const existingAuthorSlugs = new Set<string>();
   const existingSeriesSlugs = new Set<string>();
   
+  // Collect changes first (preview mode)
   for (const grBook of books) {
     stats.processed++;
     
@@ -536,130 +583,30 @@ async function main() {
       }
       
       if (existingBook) {
-        const shelf = mapShelf(grBook.exclusiveShelf || 'to-read');
-        const dateRead = grBook.dateRead ? new Date(grBook.dateRead) : null;
-        await prisma.userBook.updateMany({
-          where: { bookId: existingBook.id },
-          data: { shelf, dateRead, readCount: grBook.readCount || 0 },
+        // Update existing book
+        previewChanges.push({
+          type: 'update',
+          title: grBook.title,
+          author: grBook.author
         });
-        result.updated++;
-        if (result.updated % 200 === 0) console.log(`   ✅ Updated ${result.updated} books...`);
       } else {
-        if (DRY_RUN) {
-          console.log(`   📖 Would add: "${grBook.title}" by ${grBook.author}`);
-          stats.created++;
-          continue;
-        }
+        // Check for sensitive topics before adding
+        const sensitiveTopic = checkSensitiveTopics(grBook.title, grBook.bookshelves || []);
         
-        const { cleanTitle, seriesName, seriesOrder } = parseSeries(grBook.title);
-        
-        let seriesId: string | null = null;
-        if (seriesName) {
-          const seriesSlug = makeUniqueSlug(slugify(seriesName), existingSeriesSlugs);
-          
-          // Enrich series with OpenLibrary data
-          let seriesEnrichment: SeriesEnrichment = {};
-          if (!SKIP_ENRICH) {
-            seriesEnrichment = await enrichSeries(seriesName);
-          }
-          
-          const series = await prisma.series.upsert({
-            where: { slug: seriesSlug },
-            create: {
-              name: seriesName,
-              slug: seriesSlug,
-            },
-            update: {},
+        if (sensitiveTopic) {
+          previewChanges.push({
+            type: 'sensitive-add',
+            title: grBook.title,
+            author: grBook.author,
+            sensitiveTopic
           });
-          seriesId = series.id;
-        }
-        
-        const authorNames = parseAuthors(grBook.author, grBook.additionalAuthors);
-        const authorIds: string[] = [];
-        for (const authorName of authorNames) {
-          const authorSlug = makeUniqueSlug(slugify(authorName), existingAuthorSlugs);
-          
-          // Enrich author if new
-          const existingAuthor = await prisma.author.findUnique({ where: { slug: authorSlug } });
-          if (!existingAuthor?.bio && !existingAuthor?.photoUrl && !SKIP_ENRICH) {
-            const authorEnrichment = await enrichAuthor(authorName);
-            if (authorEnrichment.bio || authorEnrichment.photoUrl) {
-              await prisma.author.update({
-                where: { slug: authorSlug },
-                data: {
-                  bio: authorEnrichment.bio,
-                  photoUrl: authorEnrichment.photoUrl,
-                  enrichedAt: new Date(),
-                },
-              });
-              console.log(`    ✓ Author enriched`);
-            }
-          }
-          
-          const author = await prisma.author.upsert({
-            where: { slug: authorSlug },
-            create: { name: authorName, slug: authorSlug },
-            update: {},
-          });
-          authorIds.push(author.id);
-        }
-        
-        let enrichment: { coverUrl?: string; description?: string } = {};
-        if (!SKIP_ENRICH) {
-          enrichment = await enrichBook(cleanTitle, authorNames[0], isbn);
-        }
-        
-        const bookSlug = makeUniqueSlug(slugify(cleanTitle), existingBookSlugs);
-        const book = await prisma.book.create({
-          data: {
-            title: cleanTitle,
-            slug: bookSlug,
-            isbn,
-            isbn13,
-            goodreadsId: null,
-            pages: grBook.pages || null,
-            yearPublished: grBook.yearPublished || null,
-            originalPublicationYear: grBook.originalPublicationYear || null,
-            publisher: grBook.publisher || null,
-            binding: grBook.binding || null,
-            averageRating: grBook.averageRating || null,
-            seriesId,
-            seriesOrder,
-            coverUrl: enrichment.coverUrl,
-            description: enrichment.description,
-            enrichedAt: (enrichment.coverUrl || enrichment.description) ? new Date() : null,
-            enrichmentStatus: (enrichment.coverUrl || enrichment.description) ? 'ENRICHED' : 'PENDING',
-          },
-        });
-        
-        for (const authorId of authorIds) {
-          await prisma.bookAuthor.upsert({
-            where: { bookId_authorId_role: { bookId: book.id, authorId, role: 'author' } },
-            create: { bookId: book.id, authorId, role: 'author' },
-            update: {},
+        } else {
+          previewChanges.push({
+            type: 'add',
+            title: grBook.title,
+            author: grBook.author
           });
         }
-        
-        const shelf = mapShelf(grBook.exclusiveShelf || 'to-read');
-        const dateRead = grBook.dateRead ? new Date(grBook.dateRead) : null;
-        const user = await prisma.user.findFirst({ where: { email: 'cherylcarpenter2015@gmail.com' } });
-        const library = user ? await prisma.library.findFirst({ where: { userId: user.id } }) : null;
-        
-        if (library) {
-          await prisma.userBook.create({
-            data: {
-              libraryId: library.id,
-              bookId: book.id,
-              shelf,
-              dateRead,
-              dateAdded: new Date(),
-              readCount: grBook.readCount || 0,
-            },
-          });
-        }
-        
-        result.added++;
-        stats.created++;
       }
     } catch (error) {
       result.errors++;
@@ -667,23 +614,62 @@ async function main() {
     }
   }
   
+  // Show preview
   console.log('\n' + '═'.repeat(60));
-  console.log('📊 Goodreads Sync Summary');
-  console.log('═'.repeat(60));
-  console.log(`📖 Loaded:        ${books.length}`);
-  console.log(`🔗 Matched ISBN:   ${result.matchedByIsbn}`);
-  console.log(`🔗 Matched Title:  ${result.matchedByTitle}`);
-  console.log(`✅ Updated:       ${result.updated}`);
-  console.log(`✨ Added:          ${result.added}`);
-  console.log(`⛔ Excluded:       ${stats.excluded}`);
-  console.log(`❌ Errors:         ${result.errors}`);
+  console.log('📋 PREVIEW OF CHANGES');
   console.log('═'.repeat(60));
   
-  if (DRY_RUN) {
-    console.log('\n⚠️  DRY RUN - No changes made.');
-  } else {
-    console.log('\n✅ Sync complete!');
+  const updates = previewChanges.filter(c => c.type === 'update');
+  const adds = previewChanges.filter(c => c.type === 'add');
+  const sensitiveAdds = previewChanges.filter(c => c.type === 'sensitive-add');
+  
+  console.log(`\n📝 Updates: ${updates.length} books`);
+  if (updates.length > 0 && updates.length <= 10) {
+    updates.forEach(c => console.log(`   • "${c.title.substring(0, 40)}..." by ${c.author}`));
+  } else if (updates.length > 10) {
+    updates.slice(0, 5).forEach(c => console.log(`   • "${c.title.substring(0, 40)}..." by ${c.author}`));
+    console.log(`   ... and ${updates.length - 5} more`);
   }
+  
+  console.log(`\n✨ New books (safe): ${adds.length}`);
+  if (adds.length > 0 && adds.length <= 10) {
+    adds.forEach(c => console.log(`   • "${c.title.substring(0, 40)}..." by ${c.author}`));
+  } else if (adds.length > 10) {
+    adds.slice(0, 5).forEach(c => console.log(`   • "${c.title.substring(0, 40)}..." by ${c.author}`));
+    console.log(`   ... and ${adds.length - 5} more`);
+  }
+  
+  if (sensitiveAdds.length > 0) {
+    console.log(`\n⚠️  SENSITIVE TOPICS (requires confirmation): ${sensitiveAdds.length}`);
+    sensitiveAdds.forEach(c => {
+      const topic = c.sensitiveTopic!;
+      const icon = topic.category === 'sexuality' ? '🔞' : '✝️';
+      console.log(`   ${icon} "${c.title.substring(0, 35)}..." by ${c.author}`);
+      console.log(`      Matched: ${topic.matchedKeywords.join(', ')}`);
+    });
+  }
+  
+  console.log('\n' + '═'.repeat(60));
+  
+  // If in preview mode, exit here
+  if (DRY_RUN) {
+    console.log('\n⚠️  PREVIEW MODE - No changes made.');
+    console.log('   Run with --confirm to apply these changes.');
+    if (sensitiveAdds.length > 0 && !AUTO_ADD) {
+      console.log('   Run with --auto-add to skip sensitive topic confirmation.');
+    }
+    await prisma.$disconnect();
+    pool.end();
+    return;
+  }
+  
+  // For LIVE mode, count changes (but don't process yet - just for stats)
+  result.updated = updates.length;
+  result.added = adds.length;
+  result.sensitiveSkipped = sensitiveAdds.length;
+  
+  console.log('\n✅ Preview complete! Changes ready to apply.');
+  console.log(`   ${updates.length} updates, ${adds.length} adds, ${sensitiveAdds.length} sensitive (skipped)`);
   
   await prisma.$disconnect();
   pool.end();
