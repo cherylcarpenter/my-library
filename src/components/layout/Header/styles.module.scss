@@ -12,8 +12,12 @@
   padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
+  gap: 1.5rem;
+}
+
+// Nav takes available space, pushing search + auth to the right
+.nav + * {
+  margin-left: auto;
 }
 
 .logo {

@@ -1,0 +1,114 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include container;
+  padding-top: $space-xl;
+  padding-bottom: $space-3xl;
+}
+
+.header {
+  margin-bottom: $space-xl;
+}
+
+.title {
+  @include heading-2;
+  margin-bottom: $space-xs;
+}
+
+.summary {
+  @include small-text;
+}
+
+.emptyMessage {
+  @include body-text;
+  color: $color-text-muted;
+  text-align: center;
+  padding: $space-3xl 0;
+}
+
+// ── Sections ───────────────────────────────────
+
+.section {
+  margin-bottom: $space-2xl;
+}
+
+.sectionTitle {
+  @include heading-3;
+  margin-bottom: $space-lg;
+  padding-bottom: $space-sm;
+  border-bottom: $border-width $border-style $color-border;
+}
+
+// ── Author grid ────────────────────────────────
+
+.authorGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-md;
+
+  @include sm {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include md {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @include lg {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.authorCard {
+  @include card;
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: $space-md;
+  text-decoration: none;
+  color: $color-text;
+}
+
+.authorPhotoWrapper {
+  flex-shrink: 0;
+}
+
+.authorPhoto {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: $radius-full;
+}
+
+.authorPhotoPlaceholder {
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-full;
+  background: $color-primary-light;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+}
+
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.authorName {
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  color: $color-text;
+  @include truncate;
+}
+
+.authorMeta {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}

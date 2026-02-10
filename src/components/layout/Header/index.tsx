@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import SearchBox from '../SearchBox';
 import styles from './styles.module.scss';
 
 function BookIcon() {
@@ -47,6 +48,8 @@ export default function Header() {
             </Link>
           ))}
         </nav>
+
+        <SearchBox />
 
         {status === 'loading' ? (
           <span className={styles.authLoading}>...</span>
