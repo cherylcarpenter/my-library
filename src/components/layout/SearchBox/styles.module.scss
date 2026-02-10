@@ -1,0 +1,282 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.searchBox {
+  position: relative;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+// ── Input wrapper ──────────────────────────────
+
+.inputWrapper {
+  display: none;
+  align-items: center;
+  gap: $space-sm;
+  background: $color-surface;
+  border: $border-width $border-style $color-border;
+  border-radius: $radius-full;
+  padding: $space-xs $space-md;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:focus-within {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+
+  @include md {
+    display: flex;
+    width: 240px;
+  }
+
+  @include lg {
+    width: 280px;
+  }
+
+  // Mobile expanded state
+  &.mobileOpen {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: $z-index-modal;
+    border-radius: 0;
+    padding: $space-sm $space-md;
+    background: $color-bg;
+    border: none;
+    border-bottom: $border-width $border-style $color-border;
+    width: 100%;
+
+    @include md {
+      position: relative;
+      border-radius: $radius-full;
+      padding: $space-xs $space-md;
+      background: $color-surface;
+      border: $border-width $border-style $color-border;
+      border-bottom: $border-width $border-style $color-border;
+      width: 240px;
+    }
+  }
+}
+
+.searchIcon {
+  color: $color-text-muted;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-family: $font-body;
+  font-size: $font-size-sm;
+  color: $color-text;
+  outline: none;
+
+  // Override global :focus-visible — the wrapper handles the focus ring
+  &:focus-visible {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: $color-text-light;
+  }
+}
+
+.clearButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: $color-text-muted;
+  cursor: pointer;
+  padding: $space-xs;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+
+  &:hover {
+    color: $color-text;
+    background: $color-border-light;
+  }
+}
+
+// ── Mobile toggle ──────────────────────────────
+
+.mobileToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: $color-text-muted;
+  cursor: pointer;
+  padding: $space-xs;
+
+  &:hover {
+    color: $color-primary;
+  }
+
+  @include md {
+    display: none;
+  }
+}
+
+.mobileCancelButton {
+  display: block;
+  background: none;
+  border: none;
+  color: $color-primary;
+  font-family: $font-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: $space-xs;
+
+  @include md {
+    display: none;
+  }
+}
+
+// ── Dropdown ───────────────────────────────────
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + $space-xs);
+  left: 0;
+  right: 0;
+  min-width: 320px;
+  background: $color-surface-elevated;
+  border: $border-width $border-style $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  z-index: $z-index-dropdown;
+  max-height: 420px;
+  overflow-y: auto;
+
+  @include mobile-only {
+    position: fixed;
+    top: 49px; // below the mobile search bar
+    left: 0;
+    right: 0;
+    border-radius: 0;
+    min-width: 0;
+    max-height: calc(100vh - 49px);
+  }
+}
+
+// ── Sections ───────────────────────────────────
+
+.section {
+  padding: $space-xs 0;
+
+  & + & {
+    border-top: $border-width $border-style $color-border-light;
+  }
+}
+
+.sectionLabel {
+  @include caption;
+  padding: $space-xs $space-md;
+}
+
+// ── Result items ───────────────────────────────
+
+.resultItem {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  text-decoration: none;
+  color: $color-text;
+  transition: background-color $transition-fast;
+
+  &:hover,
+  &.active {
+    background: $color-surface;
+  }
+}
+
+.bookCover {
+  width: 32px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+}
+
+.bookCoverPlaceholder {
+  width: 32px;
+  height: 48px;
+  background: $color-border-light;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+}
+
+.authorPhoto {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+}
+
+.authorPhotoPlaceholder {
+  width: 36px;
+  height: 36px;
+  background: $color-border-light;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+}
+
+.resultInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resultTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text;
+  @include truncate;
+}
+
+.resultMeta {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  @include truncate;
+}
+
+// ── States ─────────────────────────────────────
+
+.loadingState,
+.emptyState {
+  padding: $space-lg $space-md;
+  text-align: center;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+// ── View all link ──────────────────────────────
+
+.viewAllLink {
+  display: block;
+  padding: $space-sm $space-md;
+  text-align: center;
+  text-decoration: none;
+  color: $color-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border-top: $border-width $border-style $color-border-light;
+  transition: background-color $transition-fast;
+
+  &:hover,
+  &.active {
+    background: $color-surface;
+  }
+}
