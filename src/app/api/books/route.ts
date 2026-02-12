@@ -52,15 +52,20 @@ export async function GET(request: NextRequest) {
     // Build where clause for Book (including category filter)
     const bookWhere: Record<string, unknown> = {};
     if (category) {
-      bookWhere.genres = {
-        some: {
-          genre: {
-            category: {
-              slug: category
+      if (category === 'uncategorized') {
+        // Special case: books with no genre associations
+        bookWhere.genres = { none: {} };
+      } else {
+        bookWhere.genres = {
+          some: {
+            genre: {
+              category: {
+                slug: category
+              }
             }
           }
-        }
-      };
+        };
+      }
     }
     
     // Determine sort field and direction

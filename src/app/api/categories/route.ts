@@ -32,6 +32,24 @@ export async function GET() {
       };
     }).filter(cat => cat.bookCount > 0); // Only show categories with books
 
+    // Count uncategorized books (books with no genre associations that are in a user's library)
+    const uncategorizedCount = await prisma.book.count({
+      where: {
+        genres: { none: {} },
+        userBooks: { some: {} }
+      }
+    });
+
+    // Add uncategorized option at the end if there are any
+    if (uncategorizedCount > 0) {
+      result.push({
+        id: 'uncategorized',
+        name: 'Uncategorized',
+        slug: 'uncategorized',
+        bookCount: uncategorizedCount,
+      });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching categories:', error);
