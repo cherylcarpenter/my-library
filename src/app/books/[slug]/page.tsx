@@ -181,11 +181,14 @@ export default async function BookDetailPage({
               )}
             </div>
 
-            {/* OpenLibrary Link */}
-            {book.openLibraryId && (
+            {/* OpenLibrary Link - prefer ISBN for specific English edition */}
+            {(book.isbn || book.openLibraryId) && (
               <div className={styles.openLibrary}>
                 <a
-                  href={`https://openlibrary.org/works/${book.openLibraryId}`}
+                  href={book.isbn 
+                    ? `https://openlibrary.org/isbn/${book.isbn}`
+                    : `https://openlibrary.org/works/${book.openLibraryId}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.openLibraryLink}
