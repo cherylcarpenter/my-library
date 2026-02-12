@@ -67,12 +67,45 @@ export async function GET(
       series.books.map(b => [b.title.toLowerCase().replace(/[^\w\s]/g, '').trim(), b.slug])
     );
     
+    // Filter out non-English works
+    const isEnglishTitle = (title: string): boolean => {
+      // Filter out Hebrew, Arabic, Chinese, Japanese, Korean, Cyrillic
+      const nonLatinPattern = /[\u0590-\u05FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u0400-\u04FF]/;
+      if (nonLatinPattern.test(title)) return false;
+      
+      // Filter out German titles
+      const germanPattern = /[äöüßÄÖÜ]|(\b(und|der|die|das|ein|eine|einer|des|dem|den|für|über|unter)\b)/i;
+      if (germanPattern.test(title)) return false;
+      
+      // Filter out French titles
+      const frenchPattern = /[àâçéèêëîïôùûüÿœæ]|(\b(le|la|les|du|de|des|un|une|et|pour|avec|sur|dans)\b)/i;
+      if (frenchPattern.test(title)) return false;
+      
+      // Filter out Spanish/Portuguese titles  
+      const spanishPattern = /[ñáéíóúü¿¡]|(\b(el|los|las|del|por|para|con|una|uno)\b)/i;
+      if (spanishPattern.test(title)) return false;
+      
+      // Filter out Polish titles
+      const polishPattern = /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]|(\b(i|w|z|na|do|od|po|za|dla|jak|nie|tak|jest|są)\b)/i;
+      if (polishPattern.test(title)) return false;
+      
+      // Filter out Italian titles
+      const italianPattern = /(\b(il|lo|la|gli|le|di|da|in|su|per|con|tra|fra|che|non|sono)\b)/i;
+      if (italianPattern.test(title)) return false;
+      
+      // Filter out Dutch titles
+      const dutchPattern = /[ĳ]|(\b(het|een|van|naar|voor|met|aan|uit|bij)\b)/i;
+      if (dutchPattern.test(title)) return false;
+      
+      return true;
+    };
+    
     // Process works
     const works: SeriesWork[] = [];
     const seenTitles = new Set<string>();
     
     for (const doc of data.docs || []) {
-      if (!doc.title) continue;
+      if (!doc.title || !isEnglishTitle(doc.title)) continue;
       
       const normalizedTitle = doc.title.toLowerCase().replace(/[^\w\s]/g, '').trim();
       
