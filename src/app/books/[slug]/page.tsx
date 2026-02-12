@@ -39,6 +39,7 @@ interface BookDetail {
   dateRead?: string;
   description?: string;
   openLibraryId?: string;
+  openLibraryKey?: string;
 }
 
 async function getBook(slug: string): Promise<BookDetail | null> {
@@ -181,11 +182,14 @@ export default async function BookDetailPage({
               )}
             </div>
 
-            {/* OpenLibrary Link - use works page (reliable) */}
-            {book.openLibraryId && (
+            {/* OpenLibrary Link - prefer edition page, fall back to works */}
+            {(book.openLibraryKey || book.openLibraryId) && (
               <div className={styles.openLibrary}>
                 <a
-                  href={`https://openlibrary.org/works/${book.openLibraryId}`}
+                  href={book.openLibraryKey 
+                    ? `https://openlibrary.org/books/${book.openLibraryKey}`
+                    : `https://openlibrary.org/works/${book.openLibraryId}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.openLibraryLink}

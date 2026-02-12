@@ -60,6 +60,7 @@ export async function GET(
       isbn13: book.isbn13,
       goodreadsId: book.goodreadsId,
       openLibraryId: book.openLibraryId,
+      openLibraryKey: book.openLibraryKey,
       description: book.description,
       coverUrl: book.coverUrl,
       pages: book.pages,
