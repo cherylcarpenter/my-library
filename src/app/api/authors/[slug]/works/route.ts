@@ -119,8 +119,31 @@ export async function GET(
         .map(ba => ba.book.openLibraryKey)
     );
     
+    // Filter out non-English works (Hebrew, German, etc.)
+    const isEnglishTitle = (title: string): boolean => {
+      // Filter out Hebrew, Arabic, Chinese, Japanese, Korean, Cyrillic
+      const nonLatinPattern = /[\u0590-\u05FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u0400-\u04FF]/;
+      if (nonLatinPattern.test(title)) return false;
+      
+      // Filter out German titles (common German-only characters and words)
+      const germanPattern = /[äöüßÄÖÜ]|(\b(und|der|die|das|ein|eine|einer|des|dem|den|für|über|unter)\b)/i;
+      if (germanPattern.test(title)) return false;
+      
+      // Filter out French titles
+      const frenchPattern = /[àâçéèêëîïôùûüÿœæ]|(\b(le|la|les|du|de|des|un|une|et|pour|avec|sur|dans)\b)/i;
+      if (frenchPattern.test(title)) return false;
+      
+      // Filter out Spanish/Portuguese titles  
+      const spanishPattern = /[ñáéíóúü¿¡]|(\b(el|los|las|del|por|para|con|una|uno)\b)/i;
+      if (spanishPattern.test(title)) return false;
+      
+      return true;
+    };
+    
+    const englishEntries = (olData.entries || []).filter(work => isEnglishTitle(work.title));
+    
     // Format works (OpenLibrary covers only for speed)
-    const works = (olData.entries || []).map((work) => {
+    const works = englishEntries.map((work) => {
       const workKey = work.key.replace('/works/', '');
       const isOwned = ownedKeys.has(workKey) || 
                       ownedTitles.has(work.title.toLowerCase().trim());
@@ -159,7 +182,7 @@ export async function GET(
     
     return NextResponse.json({
       authorName: author.name,
-      totalWorks: olData.size || works.length,
+      totalWorks: works.length,
       works,
     });
   } catch (error) {

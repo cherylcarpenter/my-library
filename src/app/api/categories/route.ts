@@ -3,34 +3,44 @@ import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Get categories with book counts (via genres)
+    // Get categories with genres
     const categories = await prisma.category.findMany({
       orderBy: { sortOrder: 'asc' },
       include: {
-        _count: {
-          select: {
-            genres: true,
-          },
-        },
         genres: {
           select: {
             id: true,
-            bookCount: true,
           },
         },
       },
     });
 
-    // Calculate total books per category
-    const result = categories.map((cat) => {
-      const bookCount = cat.genres.reduce((sum, g) => sum + g.bookCount, 0);
+    // Calculate total books per category dynamically
+    const result = await Promise.all(categories.map(async (cat) => {
+      // Count unique books in this category (books in user's library with genres in this category)
+      const bookCount = await prisma.book.count({
+        where: {
+          userBooks: { some: {} },
+          genres: {
+            some: {
+              genre: {
+                categoryId: cat.id
+              }
+            }
+          }
+        }
+      });
+      
       return {
         id: cat.id,
         name: cat.name,
         slug: cat.slug,
         bookCount,
       };
-    }).filter(cat => cat.bookCount > 0); // Only show categories with books
+    }));
+    
+    // Filter to only show categories with books
+    const filteredResult = result.filter(cat => cat.bookCount > 0);
 
     // Count uncategorized books (books with no genre associations that are in a user's library)
     const uncategorizedCount = await prisma.book.count({
@@ -42,7 +52,7 @@ export async function GET() {
 
     // Add uncategorized option at the end if there are any
     if (uncategorizedCount > 0) {
-      result.push({
+      filteredResult.push({
         id: 'uncategorized',
         name: 'Uncategorized',
         slug: 'uncategorized',
@@ -50,7 +60,7 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(filteredResult);
   } catch (error) {
     console.error('Error fetching categories:', error);
     return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
