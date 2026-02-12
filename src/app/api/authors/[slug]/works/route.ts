@@ -137,6 +137,18 @@ export async function GET(
       const spanishPattern = /[ñáéíóúü¿¡]|(\b(el|los|las|del|por|para|con|una|uno)\b)/i;
       if (spanishPattern.test(title)) return false;
       
+      // Filter out Polish titles
+      const polishPattern = /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]|(\b(i|w|z|na|do|od|po|za|dla|jak|nie|tak|jest|są)\b)/i;
+      if (polishPattern.test(title)) return false;
+      
+      // Filter out Italian titles
+      const italianPattern = /(\b(il|lo|la|gli|le|di|da|in|su|per|con|tra|fra|che|non|sono)\b)/i;
+      if (italianPattern.test(title)) return false;
+      
+      // Filter out Dutch titles
+      const dutchPattern = /[ĳ]|(\b(het|een|van|naar|voor|met|aan|uit|bij)\b)/i;
+      if (dutchPattern.test(title)) return false;
+      
       return true;
     };
     
