@@ -121,8 +121,8 @@ export async function GET(
     
     // Filter out non-English works (Hebrew, German, etc.)
     const isEnglishTitle = (title: string): boolean => {
-      // Filter out Hebrew, Arabic, Chinese, Japanese, Korean, Cyrillic
-      const nonLatinPattern = /[\u0590-\u05FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u0400-\u04FF]/;
+      // Filter out Hebrew, Arabic, Chinese, Japanese, Korean, Cyrillic, Greek
+      const nonLatinPattern = /[\u0370-\u03FF\u0590-\u05FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u0400-\u04FF]/;
       if (nonLatinPattern.test(title)) return false;
       
       // Filter out German titles (common German-only characters and words)
